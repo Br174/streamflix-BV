@@ -1,0 +1,57 @@
+name: Build Streamflix BV Mobile and TV
+
+on:
+  push:
+    branches:
+      - feature/advanced-search-filters
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Build Android mobile debug APK
+        run: |
+          cat > local.properties <<'EOF'
+          APP_LAYOUT=mobile
+          TMDB_API_KEY=dummy
+          SUBDL_API_KEY=dummy
+          RABBITSTREAM_SOURCE_API=
+          EOF
+          ./gradlew clean assembleDebug --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk /tmp/Streamflix-BV-Mobile-debug.apk
+
+      - name: Build Android TV debug APK
+        run: |
+          cat > local.properties <<'EOF'
+          APP_LAYOUT=tv
+          TMDB_API_KEY=dummy
+          SUBDL_API_KEY=dummy
+          RABBITSTREAM_SOURCE_API=
+          EOF
+          ./gradlew clean assembleDebug --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk /tmp/Streamflix-BV-TV-debug.apk
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: Streamflix-BV-debug-APKs
+          path: |
+            /tmp/Streamflix-BV-Mobile-debug.apk
+            /tmp/Streamflix-BV-TV-debug.apk
+          if-no-files-found: error
