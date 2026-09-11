@@ -11,7 +11,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="100dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="100dp"
         android:background="@drawable/bg_search_edittext"
         app:layout_constraintEnd_toEndOf="parent"
@@ -86,14 +86,14 @@
         android:id="@+id/ll_global_search"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/bg_btn_exoplayer_tv"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:nextFocusDown="@id/vgv_search"
+        android:nextFocusDown="@id/sp_content_type"
         app:layout_constraintEnd_toEndOf="@id/cl_search"
         app:layout_constraintStart_toStartOf="@id/cl_search"
         app:layout_constraintTop_toBottomOf="@id/cl_search">
@@ -113,14 +113,117 @@
             android:layout_height="24dp"
             android:src="@drawable/ic_switch_off"
             tools:ignore="ContentDescription" />
+    </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/ll_advanced_filters"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="@id/cl_search"
+        app:layout_constraintStart_toStartOf="@id/cl_search"
+        app:layout_constraintTop_toBottomOf="@id/ll_global_search">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Filtri avanzati"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/sp_content_type"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:focusable="true"
+                android:nextFocusDown="@id/et_date_from" />
+
+            <Spinner
+                android:id="@+id/sp_italian"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:focusable="true"
+                android:nextFocusDown="@id/et_date_to" />
+
+            <Spinner
+                android:id="@+id/sp_year"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:focusable="true"
+                android:nextFocusDown="@id/btn_apply_filters" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/et_date_from"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:hint="Dal: AAAA-MM-GG"
+                android:inputType="date"
+                android:maxLines="1"
+                android:nextFocusDown="@id/btn_reset_filters" />
+
+            <EditText
+                android:id="@+id/et_date_to"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:hint="Al: AAAA-MM-GG"
+                android:inputType="date"
+                android:maxLines="1"
+                android:nextFocusDown="@id/btn_apply_filters" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_reset_filters"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:focusable="true"
+                android:nextFocusDown="@id/vgv_search"
+                android:text="Azzera filtri" />
+
+            <Button
+                android:id="@+id/btn_apply_filters"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginStart="12dp"
+                android:focusable="true"
+                android:nextFocusDown="@id/vgv_search"
+                android:text="Applica filtri" />
+        </LinearLayout>
     </LinearLayout>
 
     <androidx.leanback.widget.VerticalGridView
         android:id="@+id/vgv_search"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:descendantFocusability="afterDescendants"
@@ -128,7 +231,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ll_global_search"
+        app:layout_constraintTop_toBottomOf="@id/ll_advanced_filters"
         tools:listitem="@layout/item_movie_tv" />
 
     <include
