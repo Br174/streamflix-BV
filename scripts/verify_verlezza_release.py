@@ -6,9 +6,11 @@ import json
 import os
 from pathlib import Path
 import re
+from urllib.parse import urlparse
 import zipfile
 
 APK_NAME = 'Visionflix_BV_TV.apk'
+BUILD_ARTIFACT_TV_NAME = 'Verlezza-Vision-TV.apk'
 CERTIFICATE = '55d9c2dc94f32e6b7685994f2652eec3d8086432e9de94e0645a8bf30f41918e'
 PACKAGE = 'com.br174.visionflix.tv.debug'
 ACTIVITY = 'com.streamflixreborn.streamflix.activities.main.MainTvActivity'
@@ -26,7 +28,16 @@ def read_manifest(path):
     require(type(code) is int and 168 <= code <= 2100000000, 'Invalid Android version code')
     require(re.fullmatch(r'[0-9]+(?:\.[0-9]+){1,3}', m.get('version_name', '')), 'Invalid version name')
     require(re.fullmatch(r'[0-9a-f]{64}', m.get('apk_sha256', '')), 'Invalid APK checksum')
-    require(re.fullmatch(r'https://d2ol7oe51mr4n9\.cloudfront\.net/user_[A-Za-z0-9]+/[0-9a-f-]{36}\.zip', m.get('archive_url', '')), 'Unexpected archive URL')
+
+    archive_url = m.get('archive_url', '')
+    parsed = urlparse(archive_url)
+    allowed_archive = False
+    if parsed.scheme == 'https' and parsed.hostname == 'd2ol7oe51mr4n9.cloudfront.net':
+        allowed_archive = bool(re.fullmatch(r'/user_[A-Za-z0-9]+/[0-9a-f-]{36}\.zip', parsed.path))
+    elif parsed.scheme == 'https' and parsed.hostname == 'sdmntprdenmarkeast.oaiusercontent.com':
+        allowed_archive = bool(re.fullmatch(r'/files/[0-9a-f-]+/raw', parsed.path))
+    require(allowed_archive, 'Unexpected archive URL')
+
     source = m.get('source', {})
     require(source.get('repository') == 'Br174/Visionflix', 'Unexpected source repository')
     require(source.get('ref') == 'refs/heads/main', 'Only source main builds may be published')
@@ -47,8 +58,14 @@ def write_env(values):
 
 def extract_apk(m, archive_path, directory):
     with zipfile.ZipFile(archive_path) as archive:
-        require(archive.namelist() == [APK_NAME], 'Archive must contain only the TV APK')
-        member = archive.getinfo(APK_NAME)
+        names = archive.namelist()
+        if names == [APK_NAME]:
+            source_name = APK_NAME
+        else:
+            require(BUILD_ARTIFACT_TV_NAME in names, 'TV APK not found in build artifact')
+            require(all(name in {'Verlezza-Vision-Mobile.apk', BUILD_ARTIFACT_TV_NAME} for name in names), 'Unexpected file in build artifact')
+            source_name = BUILD_ARTIFACT_TV_NAME
+        member = archive.getinfo(source_name)
         require(0 < member.file_size <= 250 * 1024 * 1024, 'Unexpected APK size')
         data = archive.read(member)
     require(hashlib.sha256(data).hexdigest() == m['apk_sha256'], 'APK checksum mismatch')
