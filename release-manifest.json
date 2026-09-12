@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "version_code": 169,
+  "version_name": "1.7.240",
+  "apk_sha256": "5a41c52bdc5c19c7ae00be223ae5e55b6a024ebb1d1d78df035219188aa46b3a",
+  "archive_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3E6GjrEqyb1drjFxT0lzAQlYkuB/c5dc6251-3010-4891-a40c-9418fce524e3.zip",
+  "source": {
+    "repository": "Br174/Visionflix",
+    "ref": "refs/heads/main",
+    "commit": "198d22beea0e5741d45353a58b66fdf926444c58",
+    "run_id": 34684708611,
+    "artifact_id": 10295515533,
+    "artifact_sha256": "993347b625a1df783cf3ecc2ac82b7588dd30142c7c6ba4b8516cecd7e98fa93"
+  }
+}

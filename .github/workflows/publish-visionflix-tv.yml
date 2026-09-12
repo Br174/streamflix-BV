@@ -1,9 +1,12 @@
-name: Publish Verlezza Vision TV installer
+name: Publish verified Verlezza Vision TV
 
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/publish-visionflix-tv.yml']
+    paths:
+      - release-manifest.json
+      - scripts/verify_verlezza_release.py
+      - .github/workflows/publish-visionflix-tv.yml
   workflow_dispatch:
 
 permissions:
@@ -21,69 +24,75 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      RELEASE_TAG: verlezza-tv-169
-      APK_SHA256: 5a41c52bdc5c19c7ae00be223ae5e55b6a024ebb1d1d78df035219188aa46b3a
     steps:
-      - name: Retrieve and verify the existing TV build
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate release manifest
+        run: python3 scripts/verify_verlezza_release.py prepare release-manifest.json
+
+      - name: Retrieve and check the TV installer
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --location --retry 2 --max-time 120 \
-            'https://d2ol7oe51mr4n9.cloudfront.net/user_3E6GjrEqyb1drjFxT0lzAQlYkuB/c5dc6251-3010-4891-a40c-9418fce524e3.zip' \
-            --output installer.zip
-          python3 - <<'PY'
-          import hashlib, os, pathlib, zipfile
-          with zipfile.ZipFile("installer.zip") as archive:
-              if archive.namelist() != ["Visionflix_BV_TV.apk"]:
-                  raise SystemExit("Unexpected archive contents")
-              data = archive.read("Visionflix_BV_TV.apk")
-          if hashlib.sha256(data).hexdigest() != os.environ["APK_SHA256"]:
-              raise SystemExit("APK checksum mismatch")
-          pathlib.Path("Visionflix_BV_TV.apk").write_bytes(data)
-          PY
-          printf '%s  Visionflix_BV_TV.apk\n' "$APK_SHA256" > SHA256SUMS.txt
+          curl --fail --location --retry 2 --max-time 120 "$VV_ARCHIVE_URL" --output installer.zip
+          python3 scripts/verify_verlezza_release.py extract release-manifest.json installer.zip
           sha256sum --check SHA256SUMS.txt
 
-      - name: Verify Android signature and TV entry point
+      - name: Verify signature, version, app name and TV launcher
         shell: bash
         run: |
           set -euo pipefail
-          VF_BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
-          "$VF_BUILD_TOOLS/apksigner" verify --verbose --print-certs Visionflix_BV_TV.apk | tee signature-info.txt
-          VV_CERTIFICATES="$(sed -n 's/^.*certificate SHA-256 digest: //p' signature-info.txt | sort -u)"
-          test "$VV_CERTIFICATES" = "55d9c2dc94f32e6b7685994f2652eec3d8086432e9de94e0645a8bf30f41918e"
-          "$VF_BUILD_TOOLS/aapt" dump badging Visionflix_BV_TV.apk > apk-info.txt
-          grep -F "package: name='com.br174.visionflix.tv.debug' versionCode='169' versionName='1.7.240'" apk-info.txt
-          grep -F "application-label:'Verlezza Vision'" apk-info.txt
-          grep -F "com.streamflixreborn.streamflix.activities.main.MainTvActivity" apk-info.txt
-          grep -F "sdkVersion:'21'" apk-info.txt
+          VV_BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          "$VV_BUILD_TOOLS/apksigner" verify --verbose --print-certs Visionflix_BV_TV.apk > signature-info.txt
+          "$VV_BUILD_TOOLS/aapt" dump badging Visionflix_BV_TV.apk > apk-info.txt
+          python3 scripts/verify_verlezza_release.py verify release-manifest.json apk-info.txt signature-info.txt
 
-      - name: Publish the APK for Downloader
+      - name: Prevent publication over a newer version
         shell: bash
         run: |
           set -euo pipefail
-          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+          gh api "repos/$GH_REPO/releases/latest" > latest-release.json
+          python3 scripts/verify_verlezza_release.py release-state release-manifest.json latest-release.json
+
+      - name: Publish verified APK for Downloader 3875230
+        if: env.VV_RELEASE_ACTION != 'superseded'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$VV_RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
             mkdir existing
-            gh release download "$RELEASE_TAG" --repo "$GH_REPO" --pattern Visionflix_BV_TV.apk --dir existing
+            gh release download "$VV_RELEASE_TAG" --repo "$GH_REPO" --pattern Visionflix_BV_TV.apk --dir existing
             cmp Visionflix_BV_TV.apk existing/Visionflix_BV_TV.apk
-            exit 0
-          fi
-          cat > release-notes.md <<'NOTES'
-          Verlezza Vision per Android TV, versione 1.7.240 (versionCode 169).
-          
-          Codice Downloader: **3875230**. Scarica sempre l'asset Visionflix_BV_TV.apk della release Latest.
-          
-          Nome, logo e banner TV aggiornati a Verlezza Vision; incluse le modifiche alla ricerca TV, ai suggerimenti degli attori e al DNS già presenti nel progetto.
-          
-          Firma resa stabile selezionando esplicitamente la chiave conservata dal progetto. Le build precedenti usavano chiavi temporanee diverse: questo APK non può aggiornare direttamente quelle installazioni. Rimuovere la vecchia app può cancellarne i dati; salvare prima le impostazioni.
-          
-          Android minimo dichiarato: 5.0. Integrità, firma, nome e avvio TV verificati; installazione e funzionamento sulla TV restano da verificare.
-          
-          Sono pubblicati solo l'installer, il riepilogo tecnico e la somma di controllo. Il progetto Visionflix rimane privato.
-          NOTES
-          gh release create "$RELEASE_TAG" \
-            Visionflix_BV_TV.apk SHA256SUMS.txt apk-info.txt signature-info.txt \
-            --repo "$GH_REPO" --target "$GITHUB_SHA" \
-            --title 'Verlezza Vision TV — 1.7.240 (build 169)' \
-            --notes-file release-notes.md --latest
+            if [ "$VV_RELEASE_ACTION" = "publish" ]; then
+              gh release edit "$VV_RELEASE_TAG" --repo "$GH_REPO" --draft=false --latest
+            fi
+          else
+            cat > release-notes.md <<EOF
+          Verlezza Vision TV ${VV_VERSION_NAME} (build ${VV_VERSION_CODE}).
 
+          Codice Downloader: **3875230**.
+          Il nome del file resta Visionflix_BV_TV.apk per conservare il collegamento stabile.
+
+          Verificati integrità, firma, versione, nome e launcher TV. La prova sul dispositivo finale resta da effettuare.
+          Firma stabile dalla build 168: le precedenti build con chiavi temporanee diverse non sono aggiornabili direttamente. Prima di rimuovere la vecchia app, salvare dati e impostazioni.
+          EOF
+            gh release create "$VV_RELEASE_TAG" \
+              Visionflix_BV_TV.apk SHA256SUMS.txt apk-info.txt signature-info.txt release-manifest.json \
+              --repo "$GH_REPO" --target "$GITHUB_SHA" \
+              --title "Verlezza Vision TV — ${VV_VERSION_NAME} (build ${VV_VERSION_CODE})" \
+              --notes-file release-notes.md --draft
+            gh release edit "$VV_RELEASE_TAG" --repo "$GH_REPO" --draft=false --latest
+          fi
+
+      - name: Verify the anonymous stable download
+        if: env.VV_RELEASE_ACTION != 'superseded'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --max-time 120 \
+            'https://github.com/Br174/streamflix-BV/releases/latest/download/Visionflix_BV_TV.apk' \
+            --output public-download.apk
+          echo "$VV_APK_SHA256  public-download.apk" | sha256sum --check -
+          echo "Verlezza Vision ${VV_VERSION_NAME}: download pubblico verificato, codice 3875230." >> "$GITHUB_STEP_SUMMARY"
