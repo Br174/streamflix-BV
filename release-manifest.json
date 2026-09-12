@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "version_code": 171,
-  "version_name": "1.7.242",
-  "apk_sha256": "ce39a538052887d850f5e8dfd8fbab0440e3d6eec5b2664d02ece59d85067c36",
-  "archive_url": "https://sdmntprdenmarkeast.oaiusercontent.com/files/00000000-9368-8210-b19a-b8fd68a7a835/raw?se=2026-09-12T11%3A56%3A07Z&sp=r&sv=2026-02-06&sr=b&scid=e4d8e363-802c-511a-baac-9fd5774100a9&skoid=d294dba5-36f7-432b-aab8-935656489847&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-12T11%3A42%3A55Z&ske=2026-09-13T11%3A42%3A55Z&sks=b&skv=2026-02-06&sig=MpxCbsYN1GbbgelbIGHcenXkkvgxKM1vZTmdnCS1w2M%3D",
+  "version_code": 173,
+  "version_name": "1.7.244",
+  "apk_sha256": "2275e998f8cb907f7b49329980b52fb2e4c85b5ae151b379dc06bf841483aa6e",
+  "archive_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3E6GjrEqyb1drjFxT0lzAQlYkuB/1f5bda6a-aa6c-458e-bc44-57c57b2edf28.zip",
   "source": {
     "repository": "Br174/Visionflix",
     "ref": "refs/heads/main",
-    "commit": "00039222b415836aca6318695bbf618a8461f486",
-    "run_id": 34688273523,
-    "artifact_id": 10296484575,
-    "artifact_sha256": "6cd6ad665764a8760be93d5d0825f1e57d138c4d46f8bb1bc83171cf7a9d6a13"
+    "commit": "39d3447ac375e5fd744c72fc3f21647564370341",
+    "run_id": 34693590377,
+    "artifact_id": 10297358093,
+    "artifact_sha256": "fe085a18dbd6724607a5941875f342e90f75167fbf3baea65678db6742a4f71b"
   }
 }
