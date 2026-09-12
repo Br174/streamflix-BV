@@ -1,0 +1,81 @@
+name: Publish Visionflix BV TV installer
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-visionflix-tv.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-visionflix-tv-build28
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'Br174/streamflix-BV'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: bv-tv-build28
+      APK_SHA256: 9ebe46cb8f012b38442571b5866b5b7c1e0568cb25ff9838a22af6f56ceda970
+    steps:
+      - name: Retrieve and verify the existing TV build
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --max-time 120 \
+            'https://d2ol7oe51mr4n9.cloudfront.net/user_3E6GjrEqyb1drjFxT0lzAQlYkuB/dc27003f-08c9-4eac-a01c-7a2f3dbf8fff.zip' \
+            --output installer.zip
+          python3 - <<'PY'
+          import hashlib, os, pathlib, zipfile
+          with zipfile.ZipFile("installer.zip") as archive:
+              if archive.namelist() != ["Visionflix_BV_TV.apk"]:
+                  raise SystemExit("Unexpected archive contents")
+              data = archive.read("Visionflix_BV_TV.apk")
+          if hashlib.sha256(data).hexdigest() != os.environ["APK_SHA256"]:
+              raise SystemExit("APK checksum mismatch")
+          pathlib.Path("Visionflix_BV_TV.apk").write_bytes(data)
+          PY
+          printf '%s  Visionflix_BV_TV.apk\n' "$APK_SHA256" > SHA256SUMS.txt
+          sha256sum --check SHA256SUMS.txt
+
+      - name: Verify Android signature and TV entry point
+        shell: bash
+        run: |
+          set -euo pipefail
+          VF_BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          "$VF_BUILD_TOOLS/apksigner" verify --verbose --print-certs Visionflix_BV_TV.apk
+          "$VF_BUILD_TOOLS/aapt" dump badging Visionflix_BV_TV.apk > apk-info.txt
+          grep -F "package: name='com.br174.visionflix.tv.debug'" apk-info.txt
+          grep -F "com.streamflixreborn.streamflix.activities.main.MainTvActivity" apk-info.txt
+          grep -F "sdkVersion:'21'" apk-info.txt
+
+      - name: Publish the APK for Downloader
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            mkdir existing
+            gh release download "$RELEASE_TAG" --repo "$GH_REPO" --pattern Visionflix_BV_TV.apk --dir existing
+            cmp Visionflix_BV_TV.apk existing/Visionflix_BV_TV.apk
+            exit 0
+          fi
+          cat > release-notes.md <<'NOTES'
+          Installer Visionflix BV per Android TV, versione 1.7.231 (build 28).
+          
+          Scaricare Visionflix_BV_TV.apk nella sezione Assets. Il collegamento diretto può essere inserito nell'app Downloader sulla TV.
+          
+          È la compilazione TV esistente, firmata con la chiave debug del progetto; non contiene nuove modifiche al comportamento dell'app. Android minimo dichiarato: 5.0. Installazione e funzionamento sul dispositivo finale restano da verificare.
+          
+          Sono pubblicati solo l'installer, il riepilogo tecnico e la somma di controllo. Il progetto Visionflix rimane privato.
+          NOTES
+          gh release create "$RELEASE_TAG" \
+            Visionflix_BV_TV.apk SHA256SUMS.txt apk-info.txt \
+            --repo "$GH_REPO" --target "$GITHUB_SHA" \
+            --title 'Visionflix BV TV — 1.7.231 (build 28)' \
+            --notes-file release-notes.md --latest
