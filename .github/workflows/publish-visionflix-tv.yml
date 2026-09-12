@@ -1,4 +1,4 @@
-name: Publish Visionflix BV TV installer
+name: Publish Verlezza Vision TV installer
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: publish-visionflix-tv-build28
+  group: publish-verlezza-vision-tv
   cancel-in-progress: false
 
 jobs:
@@ -21,15 +21,15 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      RELEASE_TAG: bv-tv-build28
-      APK_SHA256: 9ebe46cb8f012b38442571b5866b5b7c1e0568cb25ff9838a22af6f56ceda970
+      RELEASE_TAG: verlezza-tv-169
+      APK_SHA256: 5a41c52bdc5c19c7ae00be223ae5e55b6a024ebb1d1d78df035219188aa46b3a
     steps:
       - name: Retrieve and verify the existing TV build
         shell: bash
         run: |
           set -euo pipefail
           curl --fail --location --retry 2 --max-time 120 \
-            'https://d2ol7oe51mr4n9.cloudfront.net/user_3E6GjrEqyb1drjFxT0lzAQlYkuB/dc27003f-08c9-4eac-a01c-7a2f3dbf8fff.zip' \
+            'https://d2ol7oe51mr4n9.cloudfront.net/user_3E6GjrEqyb1drjFxT0lzAQlYkuB/c5dc6251-3010-4891-a40c-9418fce524e3.zip' \
             --output installer.zip
           python3 - <<'PY'
           import hashlib, os, pathlib, zipfile
@@ -49,9 +49,12 @@ jobs:
         run: |
           set -euo pipefail
           VF_BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
-          "$VF_BUILD_TOOLS/apksigner" verify --verbose --print-certs Visionflix_BV_TV.apk
+          "$VF_BUILD_TOOLS/apksigner" verify --verbose --print-certs Visionflix_BV_TV.apk | tee signature-info.txt
+          VV_CERTIFICATES="$(sed -n 's/^.*certificate SHA-256 digest: //p' signature-info.txt | sort -u)"
+          test "$VV_CERTIFICATES" = "55d9c2dc94f32e6b7685994f2652eec3d8086432e9de94e0645a8bf30f41918e"
           "$VF_BUILD_TOOLS/aapt" dump badging Visionflix_BV_TV.apk > apk-info.txt
-          grep -F "package: name='com.br174.visionflix.tv.debug'" apk-info.txt
+          grep -F "package: name='com.br174.visionflix.tv.debug' versionCode='169' versionName='1.7.240'" apk-info.txt
+          grep -F "application-label:'Verlezza Vision'" apk-info.txt
           grep -F "com.streamflixreborn.streamflix.activities.main.MainTvActivity" apk-info.txt
           grep -F "sdkVersion:'21'" apk-info.txt
 
@@ -66,16 +69,21 @@ jobs:
             exit 0
           fi
           cat > release-notes.md <<'NOTES'
-          Installer Visionflix BV per Android TV, versione 1.7.231 (build 28).
+          Verlezza Vision per Android TV, versione 1.7.240 (versionCode 169).
           
-          Scaricare Visionflix_BV_TV.apk nella sezione Assets. Il collegamento diretto può essere inserito nell'app Downloader sulla TV.
+          Codice Downloader: **3875230**. Scarica sempre l'asset Visionflix_BV_TV.apk della release Latest.
           
-          È la compilazione TV esistente, firmata con la chiave debug del progetto; non contiene nuove modifiche al comportamento dell'app. Android minimo dichiarato: 5.0. Installazione e funzionamento sul dispositivo finale restano da verificare.
+          Nome, logo e banner TV aggiornati a Verlezza Vision; incluse le modifiche alla ricerca TV, ai suggerimenti degli attori e al DNS già presenti nel progetto.
+          
+          Firma resa stabile selezionando esplicitamente la chiave conservata dal progetto. Le build precedenti usavano chiavi temporanee diverse: questo APK non può aggiornare direttamente quelle installazioni. Rimuovere la vecchia app può cancellarne i dati; salvare prima le impostazioni.
+          
+          Android minimo dichiarato: 5.0. Integrità, firma, nome e avvio TV verificati; installazione e funzionamento sulla TV restano da verificare.
           
           Sono pubblicati solo l'installer, il riepilogo tecnico e la somma di controllo. Il progetto Visionflix rimane privato.
           NOTES
           gh release create "$RELEASE_TAG" \
-            Visionflix_BV_TV.apk SHA256SUMS.txt apk-info.txt \
+            Visionflix_BV_TV.apk SHA256SUMS.txt apk-info.txt signature-info.txt \
             --repo "$GH_REPO" --target "$GITHUB_SHA" \
-            --title 'Visionflix BV TV — 1.7.231 (build 28)' \
+            --title 'Verlezza Vision TV — 1.7.240 (build 169)' \
             --notes-file release-notes.md --latest
+
