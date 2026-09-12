@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "version_code": 173,
-  "version_name": "1.7.244",
-  "apk_sha256": "2275e998f8cb907f7b49329980b52fb2e4c85b5ae151b379dc06bf841483aa6e",
-  "archive_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3E6GjrEqyb1drjFxT0lzAQlYkuB/1f5bda6a-aa6c-458e-bc44-57c57b2edf28.zip",
+  "version_code": 176,
+  "version_name": "1.7.247",
+  "apk_sha256": "a790eca21324de9ebbf5f13d1d1c33d96dd8a595c22162b8711c8b3b5977ab7e",
+  "archive_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3E6GjrEqyb1drjFxT0lzAQlYkuB/2ada0989-4723-4091-b5cb-fbd7eaa4a72e.zip",
   "source": {
     "repository": "Br174/Visionflix",
     "ref": "refs/heads/main",
-    "commit": "39d3447ac375e5fd744c72fc3f21647564370341",
-    "run_id": 34693590377,
-    "artifact_id": 10297358093,
-    "artifact_sha256": "fe085a18dbd6724607a5941875f342e90f75167fbf3baea65678db6742a4f71b"
+    "commit": "f16e22c1613e52434d47cee3645fc3231092b4bd",
+    "run_id": 34695862746,
+    "artifact_id": 10299145984,
+    "artifact_sha256": "a14ceb6597d8a7aea9a0968ae54247e5b92314816926351bd135561080930d25"
   }
 }
