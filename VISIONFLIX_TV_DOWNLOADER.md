@@ -19,21 +19,25 @@ Il download anonimo dal collegamento `releases/latest/download/Visionflix_BV_TV.
 
 Sono stati verificati integrità, certificato, versione, nome Verlezza Vision, launcher TV e presenza del nuovo banner. Installazione e funzionamento sul dispositivo finale restano da verificare.
 
-## Automatismo
+## Automatismo attivo tramite Work
 
-Il progetto privato `Br174/Visionflix` compila automaticamente Mobile e TV a ogni push su `main`.
+È attivo il controllo programmato **Aggiorna Verlezza Vision**, con frequenza **oraria**.
 
-Per la TV il workflow:
+1. Il progetto privato `Br174/Visionflix` compila Mobile e TV a ogni push su `main`.
+2. Il controllo di Work confronta l'ultima build riuscita del commit corrente con la release pubblica.
+3. Quando trova una nuova versione verificata, trasferisce il solo APK TV mediante i collegamenti già autorizzati e aggiorna `release-manifest.json`.
+4. Il workflow pubblico verifica archivio, checksum, firma, nome, package, versione e launcher TV, quindi pubblica la nuova release Latest.
+5. Verifica anche il download anonimo dal collegamento stabile prima di annunciare il successo.
 
-1. aumenta automaticamente `versionCode` e `versionName` in CI;
-2. seleziona esplicitamente la chiave conservata dal workflow e ne verifica il certificato, evitando il percorso predefinito del runner;
-3. compila l'APK TV con application ID `com.br174.visionflix.tv.debug`;
-4. verifica firma, package, entry point TV e versionCode;
-5. salva gli APK come artifact GitHub Actions;
-6. aggiorna anche la release privata `tv-latest` del progetto sorgente;
-7. se è configurato il secret `PUBLISH_TOKEN`, pubblica automaticamente una nuova release **Latest** nel repository pubblico `Br174/streamflix-BV`, allegando l'APK con il nome fisso `Visionflix_BV_TV.apk`.
+Il codice **3875230** rimane invariato. Il controllo è periodico: la pubblicazione avviene quando rileva la nuova build completata, non immediatamente a ogni modifica.
 
-Quando il punto 7 è attivo, il codice **3875230** segue sempre l'ultima APK TV pubblicata: non serve creare un nuovo codice Downloader ad ogni versione.
+Questo percorso usa i collegamenti GitHub e Higgsfield già autorizzati e **non richiede il secret PUBLISH_TOKEN**. Il relativo warning nella compilazione privata riguarda solo il percorso diretto alternativo descritto più sotto.
+
+Le build con firma diversa, versione errata, contenuto inatteso o collisioni con un asset esistente vengono bloccate. Una versione pubblica più recente non viene sostituita da una precedente.
+
+Procedura operativa: [AUTOPUBLISH.md](AUTOPUBLISH.md). Dati della versione candidata: [release-manifest.json](release-manifest.json).
+
+Il nuovo workflow è stato eseguito e verificato sulla versione 1.7.240 già pubblicata: riconosce la ripetizione, conserva l'APK esistente e verifica lo stesso download pubblico.
 
 ## Firma e banner TV
 
@@ -49,15 +53,11 @@ Le prossime compilazioni devono mantenere il certificato qui indicato. In caso d
 
 Dalla build **169**, il banner TV usa il logo WebP valido su sfondo nero in formato 16:9. Il precedente PNG della grafica aggiornata aveva una struttura danneggiata e non è più referenziato dal launcher TV.
 
-## Autorizzazione una tantum
+## Alternativa facoltativa: pubblicazione immediata da GitHub
 
-Nel repository privato `Br174/Visionflix` deve esistere un Actions secret chiamato `PUBLISH_TOKEN`. Deve contenere un fine-grained GitHub token autorizzato sul solo repository `Br174/streamflix-BV` con permesso **Contents: Read and write**.
+Per pubblicare direttamente dal workflow privato al termine della compilazione, invece del controllo periodico di Work, si può configurare nel repository `Br174/Visionflix` un Actions secret `PUBLISH_TOKEN`: un fine-grained GitHub token limitato al repository pubblico `Br174/streamflix-BV`, con permesso **Contents: Read and write**.
 
-Il token non va scritto nei sorgenti, nei log o in chat.
-
-La build 169 del 12 settembre 2026 ha ancora segnalato `PUBLISH_TOKEN non configurato`: la compilazione riesce, ma non aggiorna da sola il download pubblico. Modificare nome e grafica o pubblicare una release privata non sostituisce l'APK del repository pubblico.
-
-In assenza di quel secret, l'APK verificato viene pubblicato con il workflow pubblico `.github/workflows/publish-visionflix-tv.yml`, aggiornando versione, URL dell'archivio e SHA-256 della nuova build. Questo passaggio è manuale e non attiva l'automatismo tra i due repository.
+Questa alternativa non è necessaria per l'automatismo orario attivo. Il token non va scritto nei sorgenti, nei log o in chat.
 
 ## Regole da non cambiare
 
