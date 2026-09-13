@@ -11,9 +11,20 @@ import zipfile
 
 APK_NAME = 'Visionflix_BV_TV.apk'
 BUILD_ARTIFACT_TV_NAME = 'Verlezza-Vision-TV.apk'
+CURRENT_TEST_TV_NAME = 'Verlezza-Vision-TV-dropdown-test.apk'
 CERTIFICATE = '55d9c2dc94f32e6b7685994f2652eec3d8086432e9de94e0645a8bf30f41918e'
 PACKAGE = 'com.br174.visionflix.tv.debug'
 ACTIVITY = 'com.streamflixreborn.streamflix.activities.main.MainTvActivity'
+ALLOWED_ARTIFACT_NAMES = {
+    APK_NAME,
+    BUILD_ARTIFACT_TV_NAME,
+    CURRENT_TEST_TV_NAME,
+    'Verlezza-Vision-Mobile.apk',
+    'Verlezza-Vision-Mobile-dropdown-test.apk',
+    'SHA256SUMS.txt',
+    'apk-info.txt',
+    'signature-info.txt',
+}
 
 
 def require(condition, message):
@@ -34,13 +45,23 @@ def read_manifest(path):
     allowed_archive = False
     if parsed.scheme == 'https' and parsed.hostname == 'd2ol7oe51mr4n9.cloudfront.net':
         allowed_archive = bool(re.fullmatch(r'/user_[A-Za-z0-9]+/[0-9a-f-]{36}\.zip', parsed.path))
-    elif parsed.scheme == 'https' and parsed.hostname == 'sdmntprdenmarkeast.oaiusercontent.com':
+    elif (
+        parsed.scheme == 'https'
+        and parsed.hostname
+        and re.fullmatch(r'sdmntpr[a-z0-9-]*\.oaiusercontent\.com', parsed.hostname)
+    ):
         allowed_archive = bool(re.fullmatch(r'/files/[0-9a-f-]+/raw', parsed.path))
     require(allowed_archive, 'Unexpected archive URL')
 
     source = m.get('source', {})
     require(source.get('repository') == 'Br174/Visionflix', 'Unexpected source repository')
-    require(source.get('ref') == 'refs/heads/main', 'Only source main builds may be published')
+    source_ref = source.get('ref', '')
+    require(
+        bool(re.fullmatch(r'refs/heads/[A-Za-z0-9._/-]+', source_ref))
+        and '..' not in source_ref
+        and '//' not in source_ref,
+        'Only named Visionflix branch builds may be published',
+    )
     require(re.fullmatch(r'[0-9a-f]{40}', source.get('commit', '')), 'Invalid source commit')
     for field in ('run_id', 'artifact_id'):
         require(type(source.get(field)) is int and source[field] > 0, 'Invalid source ' + field)
@@ -59,15 +80,22 @@ def write_env(values):
 def extract_apk(m, archive_path, directory):
     with zipfile.ZipFile(archive_path) as archive:
         names = archive.namelist()
-        if names == [APK_NAME]:
+        require(names, 'Build artifact is empty')
+        require(all('/' not in name.rstrip('/') for name in names), 'Nested paths are not allowed in build artifact')
+        require(all(name in ALLOWED_ARTIFACT_NAMES for name in names), 'Unexpected file in build artifact')
+
+        if APK_NAME in names:
             source_name = APK_NAME
+        elif CURRENT_TEST_TV_NAME in names:
+            source_name = CURRENT_TEST_TV_NAME
         else:
             require(BUILD_ARTIFACT_TV_NAME in names, 'TV APK not found in build artifact')
-            require(all(name in {'Verlezza-Vision-Mobile.apk', BUILD_ARTIFACT_TV_NAME} for name in names), 'Unexpected file in build artifact')
             source_name = BUILD_ARTIFACT_TV_NAME
+
         member = archive.getinfo(source_name)
         require(0 < member.file_size <= 250 * 1024 * 1024, 'Unexpected APK size')
         data = archive.read(member)
+
     require(hashlib.sha256(data).hexdigest() == m['apk_sha256'], 'APK checksum mismatch')
     output = Path(directory)
     output.mkdir(parents=True, exist_ok=True)
