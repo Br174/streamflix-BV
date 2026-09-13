@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "version_code": 182,
-  "version_name": "1.7.253",
-  "apk_sha256": "aaf09c6793b05dc5514cc89559668411e941995e67abb69d5761f53385067fd0",
-  "archive_url": "https://sdmntprnortheu.oaiusercontent.com/files/00000000-7b2c-81f4-b80c-edea366a304f/raw?se=2026-09-13T12%3A16%3A20Z&sp=r&sv=2026-02-06&sr=b&scid=944d9b23-4c94-5e38-91e7-6ad745a2f910&skoid=d294dba5-36f7-432b-aab8-935656489847&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-13T08%3A19%3A52Z&ske=2026-09-14T08%3A19%3A52Z&sks=b&skv=2026-02-06&sig=VM4/nYLskzMIn7RgYuDhWa24MHOd2V85N4Pn3LuRH5U%3D",
+  "version_code": 183,
+  "version_name": "1.7.254",
+  "apk_sha256": "1c1dcab91be08eb848ad418837260ed8703bec1ae68a2bc862bf3117f13d9309",
+  "archive_url": "https://sdmntpritalynorth.oaiusercontent.com/files/00000000-7e44-8246-abb6-de5f35a6647b/raw?se=2026-09-13T14%3A43%3A33Z&sp=r&sv=2026-02-06&sr=b&scid=ba2f659a-5a9a-59b5-9b62-dedad0c48cb0&skoid=d294dba5-36f7-432b-aab8-935656489847&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-13T09%3A05%3A46Z&ske=2026-09-14T09%3A05%3A46Z&sks=b&skv=2026-02-06&sig=rmlasmFd5lwB6LBJW5rB9BqCZKYL8//PBQhiCw9XAJs%3D",
   "force_publish": true,
   "source": {
     "repository": "Br174/Visionflix",
-    "ref": "refs/heads/fix/tv-filter-focus-scroll",
-    "commit": "1538317a5cf0d14ba71ff487744720f1b03af099",
-    "run_id": 34756094563,
-    "artifact_id": 10316928338,
-    "artifact_sha256": "cd3420b83674dba73aeec98195377234c48ef50f5e72ae28ce8eedb0a3844166"
+    "ref": "refs/heads/main",
+    "commit": "5a18d4ffb113b62fe23f544e43cc1c0989e14942",
+    "run_id": 34762720788,
+    "artifact_id": 10319557545,
+    "artifact_sha256": "b90f47ec1568b72dfebafcf8337f213dcebefec00fcfb9388f67edc464bf0457"
   }
 }
