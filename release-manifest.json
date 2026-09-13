@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "version_code": 181,
-  "version_name": "1.7.252",
-  "apk_sha256": "f1bbb7f23c07b99825b99fb65d27d6c219575aed5d7e70a58cbca37fd8d70d52",
-  "archive_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3E6GjrEqyb1drjFxT0lzAQlYkuB/1a415d77-bad6-437d-bf80-e0d21f6f78ba.zip",
+  "version_code": 182,
+  "version_name": "1.7.253",
+  "apk_sha256": "aaf09c6793b05dc5514cc89559668411e941995e67abb69d5761f53385067fd0",
+  "archive_url": "https://sdmntprnortheu.oaiusercontent.com/files/00000000-7b2c-81f4-b80c-edea366a304f/raw?se=2026-09-13T12%3A16%3A20Z&sp=r&sv=2026-02-06&sr=b&scid=944d9b23-4c94-5e38-91e7-6ad745a2f910&skoid=d294dba5-36f7-432b-aab8-935656489847&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-13T08%3A19%3A52Z&ske=2026-09-14T08%3A19%3A52Z&sks=b&skv=2026-02-06&sig=VM4/nYLskzMIn7RgYuDhWa24MHOd2V85N4Pn3LuRH5U%3D",
   "source": {
     "repository": "Br174/Visionflix",
-    "ref": "refs/heads/main",
-    "commit": "48b10737d925bcffe2fe9e24d824dc71ee6157ea",
-    "run_id": 34752095974,
-    "artifact_id": 10316157701,
-    "artifact_sha256": "8ef7b6aa87fb3d2ba15ec51879eb7e4e07b560aabd049964c3ff8f9383e907c1"
+    "ref": "refs/heads/fix/tv-filter-focus-scroll",
+    "commit": "1538317a5cf0d14ba71ff487744720f1b03af099",
+    "run_id": 34756094563,
+    "artifact_id": 10316928338,
+    "artifact_sha256": "cd3420b83674dba73aeec98195377234c48ef50f5e72ae28ce8eedb0a3844166"
   }
 }
