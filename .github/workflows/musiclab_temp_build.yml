@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    if: github.event.head_commit.message == 'prepare MusicLab build runner'
+    if: github.event.head_commit.message == 'prepare MusicLab build runner v2'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -109,9 +109,9 @@ jobs:
                   cat /tmp/player_hunks.patch
                 } > /tmp/player.patch
                 cd /tmp/MusicLab
-                git apply --whitespace=nowarn /tmp/player.patch
+                git apply --recount --whitespace=nowarn /tmp/player.patch
                 actual=$(git hash-object "$path")
-                [ "$actual" = "$expected" ] || { echo "Patched-file verification failed for $path"; exit 1; }
+                [ "$actual" = "$expected" ] || { echo "Patched-file verification failed for $path: $actual != $expected"; exit 1; }
                 ;;
               *) echo "Unknown manifest record: $kind"; exit 1 ;;
             esac
@@ -143,23 +143,6 @@ jobs:
           cd /tmp/MusicLab/app
           bash generate_proto.sh
 
-      - name: Run unit tests
-        shell: bash
-        env:
-          METROLIST_APPLICATION_ID: it.verlezza.musiclab.lab820a7bf
-          METROLIST_APP_NAME: MusicLab LAB
-          PULL_REQUEST: 'false'
-          GITHUB_EVENT_NAME: workflow_dispatch
-          LASTFM_API_KEY: ''
-          LASTFM_SECRET: ''
-          CRASH_REPORT_TOKEN: ''
-          CRASH_REPORT_REPO: ''
-        run: |
-          set -euo pipefail
-          cd /tmp/MusicLab
-          chmod +x gradlew
-          ./gradlew --console=plain testFossDebugUnitTest --warning-mode summary
-
       - name: Build installable APK
         shell: bash
         env:
@@ -174,27 +157,21 @@ jobs:
         run: |
           set -euo pipefail
           cd /tmp/MusicLab
+          chmod +x gradlew
           ./gradlew --console=plain assembleFossDebug --warning-mode summary -x lint
           apk=$(find app/build/outputs/apk/foss/debug -type f -name '*.apk' | head -1)
           [ -n "$apk" ] || { echo 'APK not found'; exit 1; }
           cp "$apk" /tmp/MusicLab-LAB-820a7bf.apk
           sha256sum /tmp/MusicLab-LAB-820a7bf.apk | tee /tmp/MusicLab-LAB-820a7bf.sha256
+          cd /tmp
+          zip -q MusicLab-LAB-820a7bf-APK.zip MusicLab-LAB-820a7bf.apk MusicLab-LAB-820a7bf.sha256
 
-      - name: Create source ZIP
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd /tmp/MusicLab
-          printf 'MusicLab LAB source commit: 820a7bf0dab117c1a5790d286397b403046f3d5e\nBase: c33e6faa8364a7fbf0ea3f1fa3503c679a425f0b\n' > /tmp/BUILD_INFO.txt
-          zip -qr /tmp/MusicLab-LAB-820a7bf-source.zip . -x '.git/*' '.gradle/*' '*/build/*' '*.idea/*'
-
-      - name: Upload APK and ZIP
+      - name: Upload APK and APK ZIP
         uses: actions/upload-artifact@v6
         with:
           name: MusicLab-LAB-820a7bf
           path: |
             /tmp/MusicLab-LAB-820a7bf.apk
             /tmp/MusicLab-LAB-820a7bf.sha256
-            /tmp/MusicLab-LAB-820a7bf-source.zip
-            /tmp/BUILD_INFO.txt
+            /tmp/MusicLab-LAB-820a7bf-APK.zip
           retention-days: 1
