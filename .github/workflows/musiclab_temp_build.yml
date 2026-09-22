@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    if: github.event.head_commit.message == 'prepare MusicLab build runner v2'
+    if: github.event.head_commit.message == 'prepare MusicLab build runner v3'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -102,21 +102,57 @@ jobs:
                 ;;
               PATCH)
                 fetch_blob "$sha" /tmp/player_hunks.patch
-                {
-                  echo "diff --git a/$path b/$path"
-                  echo "--- a/$path"
-                  echo "+++ b/$path"
-                  cat /tmp/player_hunks.patch
-                } > /tmp/player.patch
-                cd /tmp/MusicLab
-                git apply --recount --whitespace=nowarn /tmp/player.patch
-                actual=$(git hash-object "$path")
+                python3 - "$path" /tmp/player_hunks.patch <<'PY'
+import sys
+from pathlib import Path
+
+target = Path('/tmp/MusicLab') / sys.argv[1]
+patch_path = Path(sys.argv[2])
+text = target.read_text(encoding='utf-8')
+had_newline = text.endswith('\n')
+lines = text.splitlines()
+patch_lines = patch_path.read_text(encoding='utf-8').splitlines()
+
+hunks = []
+current = None
+for line in patch_lines:
+    if line.startswith('@@'):
+        if current is not None:
+            hunks.append(current)
+        current = []
+    elif current is not None and line[:1] in {' ', '+', '-'}:
+        current.append(line)
+if current is not None:
+    hunks.append(current)
+
+def find_subseq(haystack, needle):
+    if not needle:
+        return None
+    limit = len(haystack) - len(needle) + 1
+    for i in range(max(0, limit)):
+        if haystack[i:i+len(needle)] == needle:
+            return i
+    return None
+
+for number, hunk in enumerate(hunks, 1):
+    old = [line[1:] for line in hunk if line[:1] in {' ', '-'}]
+    new = [line[1:] for line in hunk if line[:1] in {' ', '+'}]
+    pos = find_subseq(lines, old)
+    if pos is None:
+        raise SystemExit(f'Could not locate PlayerMenu hunk {number}')
+    lines[pos:pos+len(old)] = new
+
+result = '\n'.join(lines) + ('\n' if had_newline else '')
+target.write_text(result, encoding='utf-8')
+print(f'Applied {len(hunks)} PlayerMenu hunks')
+PY
+                actual=$(cd /tmp/MusicLab && git hash-object "$path")
                 [ "$actual" = "$expected" ] || { echo "Patched-file verification failed for $path: $actual != $expected"; exit 1; }
                 ;;
               *) echo "Unknown manifest record: $kind"; exit 1 ;;
             esac
           done < /tmp/musiclab_manifest.tsv
-          rm -f /tmp/musiclab_manifest.tsv /tmp/player_hunks.patch /tmp/player.patch
+          rm -f /tmp/musiclab_manifest.tsv /tmp/player_hunks.patch
           cd /tmp/MusicLab
           echo "MusicLab LAB source materialized successfully."
           git diff --stat
