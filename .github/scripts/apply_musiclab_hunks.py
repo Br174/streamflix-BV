@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -46,3 +48,40 @@ for number, hunk in enumerate(hunks, 1):
 result = "\n".join(lines) + ("\n" if had_newline else "")
 target.write_text(result, encoding="utf-8")
 print(f"Applied {len(hunks)} PlayerMenu hunks")
+
+# A clean GitHub-hosted runner may not have Android's conventional debug keystore.
+# The app's FossDebug signing config expects ~/.android/debug.keystore, so create
+# the standard disposable Android debug key when it is missing.
+android_dir = Path.home() / ".android"
+keystore = android_dir / "debug.keystore"
+if not keystore.exists():
+    android_dir.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [
+            "keytool",
+            "-genkeypair",
+            "-keystore",
+            str(keystore),
+            "-storepass",
+            "android",
+            "-alias",
+            "androiddebugkey",
+            "-keypass",
+            "android",
+            "-keyalg",
+            "RSA",
+            "-keysize",
+            "2048",
+            "-validity",
+            "10000",
+            "-dname",
+            "CN=Android Debug,O=Android,C=US",
+            "-noprompt",
+        ],
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+    os.chmod(keystore, 0o600)
+    print(f"Created Android debug keystore at {keystore}")
+else:
+    print(f"Android debug keystore already present at {keystore}")
