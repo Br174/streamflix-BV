@@ -1,4 +1,4 @@
-name: Temporary MusicLab encrypted build v3
+name: Temporary MusicLab encrypted build v4
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
       - name: Publish one-time public key
         uses: actions/upload-artifact@v4
         with:
-          name: musiclab-build-public-key-v3
+          name: musiclab-build-public-key-v4
           path: /tmp/musiclab_public.pem
           retention-days: 1
 
@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/musiclab_payload_v3.enc.txt?ref=${GITHUB_REF_NAME}"
+          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/musiclab_payload_v4.enc.txt?ref=${GITHUB_REF_NAME}"
           found=0
           for n in $(seq 1 180); do
             code=$(curl -sS -L -o /tmp/payload.json -w '%{http_code}' \
@@ -47,7 +47,7 @@ jobs:
               found=1
               break
             fi
-            sleep 5
+            sleep 2
           done
           [ "$found" = "1" ] || { echo 'Encrypted payload not received'; exit 1; }
           jq -r '.content' /tmp/payload.json | tr -d '\n' | base64 -d > /tmp/payload_text.b64
@@ -145,7 +145,7 @@ jobs:
       - name: Upload APK and ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: MusicLab-LAB-final-v3
+          name: MusicLab-LAB-final-v4
           path: |
             /tmp/musiclab_out/MusicLab-LAB.apk
             /tmp/musiclab_out/MusicLab-LAB-APK.zip
