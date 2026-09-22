@@ -1,4 +1,4 @@
-name: Temporary MusicLab encrypted build
+name: Temporary MusicLab encrypted build v2
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
       - name: Publish one-time public key
         uses: actions/upload-artifact@v4
         with:
-          name: musiclab-build-public-key
+          name: musiclab-build-public-key-v2
           path: /tmp/musiclab_public.pem
           retention-days: 1
 
@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/musiclab_payload.enc.txt?ref=${GITHUB_REF_NAME}"
+          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/musiclab_payload_v2.enc.txt?ref=${GITHUB_REF_NAME}"
           found=0
           for n in $(seq 1 180); do
             code=$(curl -sS -L -o /tmp/payload.json -w '%{http_code}' \
@@ -50,28 +50,30 @@ jobs:
             sleep 5
           done
           [ "$found" = "1" ] || { echo 'Encrypted payload not received'; exit 1; }
-          jq -r '.content' /tmp/payload.json | tr -d '\n' | base64 -d > /tmp/payload.b64
-          base64 -d /tmp/payload.b64 > /tmp/musiclab_bundle.tgz
-          mkdir -p /tmp/musiclab_payload
-          tar -xzf /tmp/musiclab_bundle.tgz -C /tmp/musiclab_payload
+          jq -r '.content' /tmp/payload.json | tr -d '\n' | base64 -d > /tmp/payload_text.b64
+          base64 -d /tmp/payload_text.b64 > /tmp/musiclab_outer.tgz
+          mkdir -p /tmp/musiclab_crypto
+          tar -xzf /tmp/musiclab_outer.tgz -C /tmp/musiclab_crypto
 
-      - name: Decrypt private patch
+      - name: Decrypt private source overlay
         shell: bash
         run: |
           set -euo pipefail
           openssl pkeyutl -decrypt \
             -inkey /tmp/musiclab_private.pem \
-            -in /tmp/musiclab_payload/wrapped_key.bin \
-            -out /tmp/musiclab_payload/aes.pass \
+            -in /tmp/musiclab_crypto/wrapped_key.bin \
+            -out /tmp/musiclab_crypto/aes.pass \
             -pkeyopt rsa_padding_mode:oaep \
             -pkeyopt rsa_oaep_md:sha256
           openssl enc -d -aes-256-cbc -pbkdf2 \
-            -in /tmp/musiclab_payload/patch.enc \
-            -out /tmp/musiclab.patch \
-            -pass file:/tmp/musiclab_payload/aes.pass
-          rm -f /tmp/musiclab_payload/aes.pass
+            -in /tmp/musiclab_crypto/payload.enc \
+            -out /tmp/musiclab_source_bundle.tgz \
+            -pass file:/tmp/musiclab_crypto/aes.pass
+          rm -f /tmp/musiclab_crypto/aes.pass
+          mkdir -p /tmp/musiclab_overlay
+          tar -xzf /tmp/musiclab_source_bundle.tgz -C /tmp/musiclab_overlay
 
-      - name: Prepare exact Meld base
+      - name: Prepare exact Meld base plus MusicLab LAB overlay
         shell: bash
         run: |
           set -euo pipefail
@@ -79,8 +81,8 @@ jobs:
           cd /tmp/MusicLab
           git checkout --quiet c33e6faa8364a7fbf0ea3f1fa3503c679a425f0b
           git submodule update --init --quiet metroproto
-          git apply --whitespace=nowarn /tmp/musiclab.patch
-          rm -f /tmp/musiclab.patch
+          cp -a /tmp/musiclab_overlay/app/. /tmp/MusicLab/app/
+          git apply --whitespace=nowarn /tmp/musiclab_overlay/PlayerMenu.patch
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -130,7 +132,7 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon --console=plain :app:assembleFossDebug --warning-mode summary >/tmp/musiclab_build.log 2>&1 || {
             echo 'Gradle build failed. Showing final diagnostic lines only:'
-            tail -120 /tmp/musiclab_build.log
+            tail -140 /tmp/musiclab_build.log
             exit 1
           }
           mkdir -p /tmp/musiclab_out
@@ -139,6 +141,7 @@ jobs:
           cp "$APK" /tmp/musiclab_out/MusicLab-LAB.apk
           cd /tmp/musiclab_out
           zip -q -9 MusicLab-LAB-APK.zip MusicLab-LAB.apk
+          sha256sum MusicLab-LAB.apk MusicLab-LAB-APK.zip
 
       - name: Upload APK and ZIP
         uses: actions/upload-artifact@v4
