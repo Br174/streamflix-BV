@@ -49,6 +49,18 @@ result = "\n".join(lines) + ("\n" if had_newline else "")
 target.write_text(result, encoding="utf-8")
 print(f"Applied {len(hunks)} PlayerMenu hunks")
 
+# Compose's current layout API exposes weight through RowScope/ColumnScope.
+# The explicit top-level import resolves to an internal parent-data property and
+# breaks compilation, so remove only that import from the reconstructed LAB.
+cover_dialog = Path("/tmp/MusicLab/app/src/main/kotlin/com/metrolist/music/ui/component/CoverSearchDialog.kt")
+cover_text = cover_dialog.read_text(encoding="utf-8")
+bad_import = "import androidx.compose.foundation.layout.weight\n"
+if bad_import in cover_text:
+    cover_dialog.write_text(cover_text.replace(bad_import, "", 1), encoding="utf-8")
+    print("Removed incompatible Compose weight import from CoverSearchDialog.kt")
+else:
+    print("Compose weight import already absent from CoverSearchDialog.kt")
+
 # A clean GitHub-hosted runner may not have Android's conventional debug keystore.
 # The app's FossDebug signing config expects ~/.android/debug.keystore, so create
 # the standard disposable Android debug key when it is missing.
