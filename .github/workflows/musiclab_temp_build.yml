@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    if: github.event.head_commit.message == 'temp: prepare MusicLab build runner'
+    if: github.event.head_commit.message == 'prepare MusicLab build runner'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
