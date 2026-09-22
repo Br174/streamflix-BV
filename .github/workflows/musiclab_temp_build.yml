@@ -1,4 +1,4 @@
-name: Temporary MusicLab encrypted build v4
+name: Temporary MusicLab encrypted build v5
 
 on:
   push:
@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     steps:
       - name: Generate one-time encryption key
         shell: bash
@@ -25,7 +25,7 @@ jobs:
       - name: Publish one-time public key
         uses: actions/upload-artifact@v4
         with:
-          name: musiclab-build-public-key-v4
+          name: musiclab-build-public-key-v5
           path: /tmp/musiclab_public.pem
           retention-days: 1
 
@@ -35,9 +35,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/musiclab_payload_v4.enc.txt?ref=${GITHUB_REF_NAME}"
+          API="https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/musiclab_payload_v5.enc.txt?ref=${GITHUB_REF_NAME}"
           found=0
-          for n in $(seq 1 180); do
+          for n in $(seq 1 600); do
             code=$(curl -sS -L -o /tmp/payload.json -w '%{http_code}' \
               -H "Authorization: Bearer ${GH_TOKEN}" \
               -H "Accept: application/vnd.github+json" \
@@ -145,7 +145,7 @@ jobs:
       - name: Upload APK and ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: MusicLab-LAB-final-v4
+          name: MusicLab-LAB-final-v5
           path: |
             /tmp/musiclab_out/MusicLab-LAB.apk
             /tmp/musiclab_out/MusicLab-LAB-APK.zip
