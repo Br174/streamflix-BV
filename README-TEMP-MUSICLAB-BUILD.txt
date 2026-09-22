@@ -1,0 +1,1 @@
+Temporary build branch for reconstructing and compiling MusicLab LAB. No MusicLab source files are stored as repository paths; source blobs are referenced by Git object SHA only. This file exists only on branch musiclab-build-temp.
