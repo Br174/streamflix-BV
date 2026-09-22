@@ -102,10 +102,28 @@ jobs:
                 actual=$(cd /tmp/MusicLab && git hash-object "$path")
                 [ "$actual" = "$expected" ] || { echo "Patched-file verification failed for $path: $actual != $expected"; exit 1; }
                 ;;
+              CHUNK_START)
+                mkdir -p "/tmp/MusicLab/$(dirname "$path")"
+                fetch_blob "$sha" /tmp/musiclab_chunk.part
+                cat /tmp/musiclab_chunk.part > "/tmp/MusicLab/$path"
+                ;;
+              CHUNK_APPEND)
+                fetch_blob "$sha" /tmp/musiclab_chunk.part
+                printf '\n' >> "/tmp/MusicLab/$path"
+                cat /tmp/musiclab_chunk.part >> "/tmp/MusicLab/$path"
+                ;;
+              VERIFY)
+                actual=$(cd /tmp/MusicLab && git hash-object "$path")
+                if [ "$actual" != "$sha" ]; then
+                  printf '\n' >> "/tmp/MusicLab/$path"
+                  actual=$(cd /tmp/MusicLab && git hash-object "$path")
+                fi
+                [ "$actual" = "$sha" ] || { echo "Reconstructed-file verification failed for $path: $actual != $sha"; exit 1; }
+                ;;
               *) echo "Unknown manifest record: $kind"; exit 1 ;;
             esac
           done < /tmp/musiclab_manifest.tsv
-          rm -f /tmp/musiclab_manifest.tsv /tmp/player_hunks.patch
+          rm -f /tmp/musiclab_manifest.tsv /tmp/player_hunks.patch /tmp/musiclab_chunk.part
           cd /tmp/MusicLab
           echo "MusicLab LAB source materialized successfully."
           git diff --stat
@@ -135,7 +153,7 @@ jobs:
       - name: Build installable APK
         shell: bash
         env:
-          METROLIST_APPLICATION_ID: it.verlezza.musiclab.lab820a7bf
+          METROLIST_APPLICATION_ID: it.verlezza.musiclab.lab9be5273
           METROLIST_APP_NAME: MusicLab LAB
           PULL_REQUEST: 'false'
           GITHUB_EVENT_NAME: workflow_dispatch
@@ -150,17 +168,17 @@ jobs:
           ./gradlew --console=plain assembleFossDebug --warning-mode summary -x lint
           apk=$(find app/build/outputs/apk/foss/debug -type f -name '*.apk' | head -1)
           [ -n "$apk" ] || { echo 'APK not found'; exit 1; }
-          cp "$apk" /tmp/MusicLab-LAB-820a7bf.apk
-          sha256sum /tmp/MusicLab-LAB-820a7bf.apk | tee /tmp/MusicLab-LAB-820a7bf.sha256
+          cp "$apk" /tmp/MusicLab-LAB-9be5273.apk
+          sha256sum /tmp/MusicLab-LAB-9be5273.apk | tee /tmp/MusicLab-LAB-9be5273.sha256
           cd /tmp
-          zip -q MusicLab-LAB-820a7bf-APK.zip MusicLab-LAB-820a7bf.apk MusicLab-LAB-820a7bf.sha256
+          zip -q MusicLab-LAB-9be5273-APK.zip MusicLab-LAB-9be5273.apk MusicLab-LAB-9be5273.sha256
 
       - name: Upload APK and APK ZIP
         uses: actions/upload-artifact@v6
         with:
-          name: MusicLab-LAB-820a7bf
+          name: MusicLab-LAB-9be5273
           path: |
-            /tmp/MusicLab-LAB-820a7bf.apk
-            /tmp/MusicLab-LAB-820a7bf.sha256
-            /tmp/MusicLab-LAB-820a7bf-APK.zip
+            /tmp/MusicLab-LAB-9be5273.apk
+            /tmp/MusicLab-LAB-9be5273.sha256
+            /tmp/MusicLab-LAB-9be5273-APK.zip
           retention-days: 1
