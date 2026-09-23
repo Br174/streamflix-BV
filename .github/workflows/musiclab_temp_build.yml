@@ -109,7 +109,6 @@ jobs:
                 ;;
               CHUNK_APPEND)
                 fetch_blob "$sha" /tmp/musiclab_chunk.part
-                printf '\n' >> "/tmp/MusicLab/$path"
                 cat /tmp/musiclab_chunk.part >> "/tmp/MusicLab/$path"
                 ;;
               VERIFY)
@@ -127,6 +126,24 @@ jobs:
           cd /tmp/MusicLab
           echo "MusicLab LAB source materialized successfully."
           git diff --stat
+
+      - name: Wire cover long-press standard menu
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('/tmp/MusicLab/app/src/main/kotlin/com/metrolist/music/ui/menu/PlayerMenu.kt')
+          s = p.read_text(encoding='utf-8')
+          marker = '        onDismiss = { showCoverSearchDialog = false },\n'
+          replacement = marker + '        navController = navController,\n'
+          if replacement not in s:
+              if marker not in s:
+                  raise SystemExit('CoverSearchDialog wiring point not found')
+              s = s.replace(marker, replacement, 1)
+              p.write_text(s, encoding='utf-8')
+          print('Cover result long-press wired to standard MusicLab song menu')
+          PY
 
       - name: Set up JDK 21
         uses: actions/setup-java@v5
@@ -153,7 +170,7 @@ jobs:
       - name: Build installable APK
         shell: bash
         env:
-          METROLIST_APPLICATION_ID: it.verlezza.musiclab.lab9be5273
+          METROLIST_APPLICATION_ID: it.verlezza.musiclab.lab37c644e
           METROLIST_APP_NAME: MusicLab LAB
           PULL_REQUEST: 'false'
           GITHUB_EVENT_NAME: workflow_dispatch
@@ -168,17 +185,17 @@ jobs:
           ./gradlew --console=plain assembleFossDebug --warning-mode summary -x lint
           apk=$(find app/build/outputs/apk/foss/debug -type f -name '*.apk' | head -1)
           [ -n "$apk" ] || { echo 'APK not found'; exit 1; }
-          cp "$apk" /tmp/MusicLab-LAB-9be5273.apk
-          sha256sum /tmp/MusicLab-LAB-9be5273.apk | tee /tmp/MusicLab-LAB-9be5273.sha256
+          cp "$apk" /tmp/MusicLab-LAB-37c644e.apk
+          sha256sum /tmp/MusicLab-LAB-37c644e.apk | tee /tmp/MusicLab-LAB-37c644e.sha256
           cd /tmp
-          zip -q MusicLab-LAB-9be5273-APK.zip MusicLab-LAB-9be5273.apk MusicLab-LAB-9be5273.sha256
+          zip -q MusicLab-LAB-37c644e-APK.zip MusicLab-LAB-37c644e.apk MusicLab-LAB-37c644e.sha256
 
       - name: Upload APK and APK ZIP
         uses: actions/upload-artifact@v6
         with:
-          name: MusicLab-LAB-9be5273
+          name: MusicLab-LAB-37c644e
           path: |
-            /tmp/MusicLab-LAB-9be5273.apk
-            /tmp/MusicLab-LAB-9be5273.sha256
-            /tmp/MusicLab-LAB-9be5273-APK.zip
+            /tmp/MusicLab-LAB-37c644e.apk
+            /tmp/MusicLab-LAB-37c644e.sha256
+            /tmp/MusicLab-LAB-37c644e-APK.zip
           retention-days: 1
