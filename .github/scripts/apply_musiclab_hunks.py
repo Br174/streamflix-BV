@@ -41,9 +41,25 @@ for number, hunk in enumerate(hunks, 1):
     old = [line[1:] for line in hunk if line[:1] in {" ", "-"}]
     new = [line[1:] for line in hunk if line[:1] in {" ", "+"}]
     pos = find_subseq(lines, old)
-    if pos is None:
-        raise SystemExit(f"Could not locate PlayerMenu hunk {number}")
-    lines[pos : pos + len(old)] = new
+    if pos is not None:
+        lines[pos : pos + len(old)] = new
+        continue
+
+    # Large insertion hunks can fail when GitHub omits/normalizes a harmless
+    # blank context line. Anchor the insertion to the trailing unchanged lines
+    # (the standard Details menu item) and insert only the '+' payload.
+    plus_positions = [i for i, line in enumerate(hunk) if line.startswith("+")]
+    if plus_positions:
+        last_plus = plus_positions[-1]
+        tail = [line[1:] for line in hunk[last_plus + 1 :] if line.startswith(" ")]
+        added = [line[1:] for line in hunk if line.startswith("+")]
+        tail_pos = find_subseq(lines, tail)
+        if tail_pos is not None and added:
+            lines[tail_pos:tail_pos] = added
+            print(f"Applied PlayerMenu hunk {number} using stable trailing anchor")
+            continue
+
+    raise SystemExit(f"Could not locate PlayerMenu hunk {number}")
 
 result = "\n".join(lines) + ("\n" if had_newline else "")
 target.write_text(result, encoding="utf-8")
