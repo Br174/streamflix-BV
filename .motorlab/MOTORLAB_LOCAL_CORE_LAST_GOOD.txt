@@ -1,9 +1,12 @@
 MOTORLAB_SATELLITE_BUNDLE
-RELEASE=2026.09.29-r4
+RELEASE=2026.09.29-r5
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 CHANGE_COMPATIBILITY_GUARD=required
 WATCHDOG=required
+PREVENTIVE_WATCHDOG=required
+MANUAL_LIGHTNING_RECOVERY=required
+TWO_STRIKE_NO_PROGRESS=required
 RESUME_RECOVERY=required
 FOREGROUND_STALL_GUARD=required
 PROGRESS_REPORTING=required
@@ -12,85 +15,105 @@ SINGLE_WRITER=required
 CHECKPOINT_RECOVERY=required
 
 PURPOSE
-This is the compact verified local MotorLab fallback bundle distributed to registered project repositories. It is not a second independent MotorLab authority. The central Br174/Chatgpt CORE remains authoritative whenever reachable.
+Compact verified local MotorLab fallback bundle for registered projects. Central Br174/Chatgpt remains authoritative whenever reachable.
 
 LOCAL ACTIVATION
-When a project repository or project context is recognized and this bundle is marked VERIFIED in .motorlab/MOTORLAB_SYNC_STATE.txt, MotorLab may activate immediately from the local satellite while checking the central release at the first safe boundary.
+When project context is recognized and this bundle is VERIFIED in .motorlab/MOTORLAB_SYNC_STATE.txt, MotorLab may activate immediately from local satellite while checking central release at the first safe boundary.
 
 VISIBLE STARTUP
 Normal startup message is exactly:
 "⚙️ MotorLab attivo"
-Do not append satellite, CORE, synchronization or native-engine detail during normal startup. Add technical detail only for a real warning, recovery event or blocker.
 
 CHANGE COMPATIBILITY GUARD
-Before ANY write-capable change to MotorLab itself or to the current project:
-- inspect the relevant current implementation/configuration and protected behavior;
-- identify existing modules/functions/rules that touch the same responsibility;
-- identify project-native engine ownership;
-- check direct/semantic conflicts, overlaps, duplicate responsibility, precedence ambiguity, blast radius, backward compatibility and regression risk;
-- classify the change as CLEAR, COMPLEMENTARY, MERGE_REQUIRED, PRECEDENCE_REQUIRED, CONFLICT, OBSOLETE_PATH or BLOCKED_UNSAFE;
-- if overlap exists, prefer extending/merging the existing responsible mechanism instead of stacking a competing implementation;
-- define explicit precedence or explicit supersession when required;
+Before any write-capable MotorLab/project change:
+- inspect current implementation/configuration/protected behavior;
+- identify existing mechanisms touching the same responsibility and native-engine ownership;
+- check conflicts, semantic overlaps, duplicate responsibility, precedence ambiguity, blast radius, backward compatibility and regression risk;
+- classify CLEAR / COMPLEMENTARY / MERGE_REQUIRED / PRECEDENCE_REQUIRED / CONFLICT / OBSOLETE_PATH / BLOCKED_UNSAFE;
+- merge/extend existing mechanism or define explicit precedence/supersession before writing;
 - do not write while an unsafe unresolved conflict remains.
-This check may be concise for atomic changes but may never be skipped.
+Atomic changes may use a concise check, but never skip it.
+
+WATCHDOG COORDINATION
+Watchdog is the single coordinator for progress-health detection and anti-stall intervention.
+- Foreground Stall Guard owns prevention/chunking/durable handoff;
+- Resume Recovery owns checkpoint continuation;
+- Background Execution owns persistent jobs;
+- Progress Reporting owns user-visible operational status;
+- Change Compatibility Guard owns pre-change compatibility.
+Do not run competing recovery paths for the same event.
+
+PREVENTIVE HEALTH CHECK
+During substantial work, when control/status evidence exists, perform lightweight progress-health checks at meaningful boundaries when progress appears unclear, repetitive or unusually slow.
+A visible preventive check may say:
+⚡ Controllo MotorLab — verifico che questa fase stia producendo progresso reale.
+Do not interrupt healthy work or fabricate a stall.
+
+TWO-STRIKE NO-PROGRESS RULE
+If the same write/retry/recovery strategy is attempted twice without material progress or new evidence, a third materially identical attempt is prohibited.
+First distinguish healthy external waiting from failure. If not healthy waiting, switch strategy, diagnose, narrow the substep or safe-stop.
+Repeated read-only status probes of a legitimately running job do not automatically count as failed strategy attempts.
+
+MANUAL LIGHTNING RECOVERY
+When Bruno sends only or primarily `⚡`, treat it as a high-priority MotorLab health/recovery request at the first available execution cycle:
+- inspect active/pending operation;
+- restore/read latest verified checkpoint/pending step;
+- inspect real repo/provider/job state before writing;
+- preserve completed work, percentage and single-writer lock;
+- if stalled/interrupted, Watchdog classifies and Resume Recovery continues from the smallest safe pending step;
+- if healthy work is still running, do not duplicate it;
+- if no pending operation exists, say so rather than inventing one.
+Automatic recovery remains mandatory and does not depend on `⚡`.
+If ChatGPT is fully suspended and does not accept/deliver the message, `⚡` cannot create an execution cycle by itself.
 
 FOREGROUND STALL GUARD
-Before substantial work, classify the next phase as FOREGROUND_SHORT, FOREGROUND_RISK, BACKGROUNDABLE or USER_BLOCKING.
-For FOREGROUND_RISK/BACKGROUNDABLE phases:
-- create or verify a recoverable checkpoint before entering the phase;
-- record the exact next safe step and last verified progress;
-- prefer a real persistent executor for safe backgroundable work when available and authorized;
-- otherwise divide ordinary-chat work into bounded recoverable segments;
-- do not treat ChatGPT UI "still processing" text, spinner or elapsed time as MotorLab progress or heartbeat;
-- if the host suspends execution, recover at the first later available cycle under Resume Recovery and show lightning when MotorLab actually performs recovery.
+Before substantial work classify FOREGROUND_SHORT / FOREGROUND_RISK / BACKGROUNDABLE / USER_BLOCKING.
+For risky/backgroundable phases checkpoint first, record next safe step and prefer a real persistent executor when available; otherwise use bounded recoverable segments.
+If the same foreground strategy produces no progress twice, route to Watchdog before a third identical attempt.
+ChatGPT UI "still processing" is not MotorLab progress/heartbeat.
 
-PROGRESS
-For substantial work, report verified progress percentages at meaningful phase/subtask transitions. Percentages represent completed verified work, not elapsed time. Do not invent progress.
+PROGRESS REPORTING
+For substantial work provide denser live-like operational visibility when the interface permits, normally after roughly 1-2 meaningful operations or material phase/status change.
+Show observable actions/results/current state/next action; do not expose hidden chain-of-thought.
+Percentages remain verified completion only and may repeat with useful new status.
+Preventive/recovery lightning updates should include current verified percentage when available.
 
-VISUAL SUCCESS
-Use fireworks only for verified success:
-- 🎆🎆 small verified success;
-- 🎆🎆🎆 significant verified milestone;
-- 🎆🎆🎆🎆 major/final verified completion.
-Always explain what succeeded.
-
-WATCHDOG
-Detect lack of material progress using real state/fingerprints, not time alone. Visible interventions use lightning plus explanation:
-- ⚡ verify suspected stall;
-- ⚡⚡ safe continuation;
+WATCHDOG LEVELS
+- ⚡ verify / preventive progress-health check;
+- ⚡⚡ safe continuation / changed strategy;
 - ⚡⚡⚡ checkpoint recovery;
 - ⚡⚡⚡⚡ safe stop when continuation would be unsafe.
-Never duplicate a live write/build merely because the chat appears idle.
+Visible Watchdog output always includes explanation; the user input `⚡` may be bare as the manual command.
 
 RESUME RECOVERY
-After every tool/provider/build/API/GitHub response, if the approved task is incomplete and execution control remains available, continue to the next safe action in the same turn. If the host/model interrupts execution, resume at the first later available execution cycle from the last verified checkpoint/pending action. Do not require Bruno to say "continua" for a known safe pending action.
+After each tool/provider/build/API/GitHub response, if approved work is incomplete and control remains, continue same turn.
+After host interruption, first later execution cycle restores checkpoint/pending action and continues safely under Watchdog classification.
+Manual `⚡` is a high-priority recovery opportunity, not a requirement.
 
-CHECKPOINT
-For substantial operations, preserve enough state to resume deterministically: operation/project, source ref/SHA, phase, completed milestone, exact next safe step, last verified progress, relevant job/artifact identifiers and recovery state when available.
-
-SINGLE WRITER
-Only one write-capable operation may act on the same project/repository/ref/resource scope at a time. Read-only diagnostics may run independently when safe.
+CHECKPOINT / SINGLE WRITER
+Preserve enough state to resume deterministically. Only one writer may act on the same project/repository/ref/resource scope at a time. Independent read-only diagnostics may run safely.
 
 NATIVE ENGINE COEXISTENCE
-MotorLab is control-plane/orchestration infrastructure. It must not replace, absorb, disable or rewrite the project's native/domain engines merely because MotorLab is active.
+MotorLab must not replace, absorb, disable or rewrite project-native/domain engines merely because MotorLab is active.
 
-LIFECYCLE AND PROTECTED STATE
-Respect the project's current canonical lifecycle and protected source rules. MotorLab satellite installation alone never authorizes direct modification of MADRE, package/signing identity, release semantics, protected UI or other project-specific protected behavior.
+LIFECYCLE / PROTECTED STATE
+Respect canonical lifecycle, source lineage, UI/protected behavior, package/signing identity and project-specific rules.
 
 CENTRAL SYNC
-At a safe boundary, compare local RELEASE against MOTORLAB_RELEASE_MANIFEST_V1.txt in Br174/Chatgpt. If central is newer, follow MOTORLAB_SATELLITE_SYNC_V1.txt. Never switch MotorLab release midway through an active operation.
+Compare local release with MOTORLAB_RELEASE_MANIFEST_V1.txt only at a safe boundary. Never switch MotorLab release during an active operation.
 
 FALLBACK
-If central MotorLab state cannot be reached, a VERIFIED local bundle remains usable. Preserve the current project and report fallback when it affects the work. Do not claim a newer version than the local verified release.
+If central state cannot be reached, use previously VERIFIED local bundle and LAST_GOOD rules. Do not invent a newer release.
 
 PLATFORM LIMIT
-A repository cannot create a new assistant turn while ChatGPT/the host exposes no execution cycle. Foreground Stall Guard reduces exposure to that state; Resume Recovery continues at the first later available cycle. Neither is an autonomous wake-up mechanism for a completely suspended host.
+A repository cannot force a new assistant turn when ChatGPT exposes no execution cycle. Prevention, checkpoints, durable executors and first-available-cycle recovery reduce impact but do not bypass a fully suspended host.
 
 NO RUNTIME COUPLING
-This bundle is development/orchestration metadata. Its presence must not intentionally increase APK/PWA runtime dependencies or change app behavior by itself.
+This is development/orchestration metadata only; it must not intentionally alter app runtime or package weight.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V1.3
-Revision 1.1: release 2026.09.29-r2; normal visible startup shortened to "⚙️ MotorLab attivo".
-Revision 1.2: release 2026.09.29-r3; Foreground Stall Guard added for checkpoint-first long/risky execution and durable handoff when available.
-Revision 1.3: release 2026.09.29-r4; Change Compatibility Guard added before every MotorLab/project write-capable change.
+MOTORLAB-SATELLITE-BUNDLE-V1.4
+Revision 1.1: r2 concise startup.
+Revision 1.2: r3 Foreground Stall Guard.
+Revision 1.3: r4 Change Compatibility Guard.
+Revision 1.4: r5 preventive Watchdog, two-strike anti-loop, manual `⚡` recovery and denser operational visibility integrated without competing modules.
