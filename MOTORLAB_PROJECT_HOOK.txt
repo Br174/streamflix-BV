@@ -3,6 +3,12 @@ MOTORLAB PROJECT HOOK V1
 PROJECT_NAME=streamflix-BV
 PROJECT_REPOSITORY=Br174/streamflix-BV
 MOTORLAB_CONTROL_REPOSITORY=Br174/Chatgpt
+MOTORLAB_CORE_ENTRYPOINT=MOTORLAB_CORE_ENTRYPOINT_V1.txt
+MOTORLAB_RELEASE_MANIFEST=MOTORLAB_RELEASE_MANIFEST_V1.txt
+MOTORLAB_SATELLITE_SYNC_MODULE=MOTORLAB_SATELLITE_SYNC_V1.txt
+MOTORLAB_LOCAL_CORE=.motorlab/MOTORLAB_LOCAL_CORE.txt
+MOTORLAB_LOCAL_LAST_GOOD=.motorlab/MOTORLAB_LOCAL_CORE_LAST_GOOD.txt
+MOTORLAB_LOCAL_SYNC_STATE=.motorlab/MOTORLAB_SYNC_STATE.txt
 MOTORLAB_BOOTSTRAP_MODULE=MOTORLAB_AUTO_BOOTSTRAP_V1.txt
 MOTORLAB_GOVERNANCE_MODULE=MOTORLAB_GOVERNANCE_V1.txt
 MOTORLAB_GLOBAL_PERSISTENT_ACTIVATION_MODULE=MOTORLAB_GLOBAL_PERSISTENT_ACTIVATION_V1.txt
@@ -11,32 +17,27 @@ MOTORLAB_PROGRESS_REPORTING_MODULE=MOTORLAB_PROGRESS_REPORTING_V1.txt
 MOTORLAB_VISUAL_STATUS_MODULE=MOTORLAB_VISUAL_STATUS_V1.txt
 MOTORLAB_WATCHDOG_MODULE=MOTORLAB_WATCHDOG_V1.txt
 MOTORLAB_RESUME_RECOVERY_MODULE=MOTORLAB_RESUME_RECOVERY_V1.txt
-MOTORLAB_ACTIVATION_MODE=implicit-persistent
+MOTORLAB_ACTIVATION_MODE=implicit-persistent-local-first
 MOTORLAB_PROJECT_CHAT_POLICY=Visionflix-Verlezza-Vision-canonical-chat
 MOTORLAB_NATIVE_ENGINE_POLICY=delivery-adapter-coexist-preserve
 MOTORLAB_VISIBLE_ACTIVATION_PROOF=required
 
 PURPOSE
-Persistent delivery-side structural hook for MotorLab. When this repository is used as the Visionflix/Verlezza Vision delivery path, MotorLab is implicitly and persistently enabled and must load current canonical control state from Br174/Chatgpt before write-capable delivery/lifecycle operations.
+Persistent delivery-side MotorLab hook. A recognized streamflix-BV delivery session loads the VERIFIED local satellite first and then checks the central Br174/Chatgpt release at the first safe boundary.
 
 MANDATORY RULES
-1. Do not require Bruno to paste an activation string for delivery operations.
-2. Every new identifiable delivery chat/session inherits MotorLab automatically by project/delivery context.
-3. At the first available user-facing response of a recognized delivery chat/session, visibly state that MotorLab is active and operating alongside the existing delivery mechanism.
-4. If the visible MotorLab startup message has not appeared, Bruno must not be expected to assume that MotorLab is active.
-5. After startup, apply current MotorLab progress percentage, watchdog lightning/recovery and verified fireworks-success contracts whenever applicable.
-6. Br174/Chatgpt remains authoritative; this repository is a delivery adapter and never becomes lifecycle authority for Visionflix source.
-7. MotorLab must coexist with and preserve the existing delivery mechanism; it must not replace or rewrite it merely because MotorLab is active.
-8. Before write-capable delivery work, reconcile current CORE/governance/routing/registry and relevant durable job/checkpoint/lock state.
-9. This hook is orchestration metadata only and must not alter Downloader semantics, release payloads or app behavior by itself.
-10. MOTORLAB_GLOBAL_PERSISTENT_ACTIVATION_V1.txt is mandatory and remains inherited by this delivery path until explicitly superseded through canonical MotorLab governance.
-11. MOTORLAB_RESUME_RECOVERY_V1.txt is mandatory. Incomplete tool-driven work must continue in the same turn when control remains available; host interruptions must resume at the first later execution cycle from the last verified checkpoint with a visible lightning recovery event.
-12. If control state is unavailable, preserve delivery state and report the blocker rather than guessing.
-13. Later canonical MotorLab governance revisions supersede frozen assumptions in this hook.
+1. No per-chat manual MotorLab activation string is required for delivery operations.
+2. Load local sync state/core immediately and synchronize only at a safe boundary.
+3. Pin the MotorLab release during an active delivery operation.
+4. Use VERIFIED local/LAST_GOOD fallback if central access is temporarily unavailable.
+5. Show the visible MotorLab startup banner in the first available response.
+6. Apply progress, Watchdog, Resume Recovery and fireworks-success contracts.
+7. Br174/Chatgpt remains authoritative; local files are synchronized satellites.
+8. streamflix-BV remains delivery-only and never becomes lifecycle authority for Visionflix source.
+9. MotorLab must coexist with the existing delivery mechanism and must not alter Downloader semantics, release payloads or app behavior merely because MotorLab is active.
+10. Reconcile repository/ref, checkpoint, pending-action and single-writer state before write-capable delivery work.
 
 VERSION
-MOTORLAB-PROJECT-HOOK-V1.3
+MOTORLAB-PROJECT-HOOK-V1.4
 Established: 2026-09-29
-Revision 1.1: mandatory visible session boot banner plus explicit progress/watchdog/visual-status bindings.
-Revision 1.2: explicit binding to global persistent MotorLab activation for every future delivery chat.
-Revision 1.3: mandatory Resume Recovery binding.
+Revision 1.4: local-first synchronized satellite with LAST_GOOD fallback and safe-boundary release pinning.
