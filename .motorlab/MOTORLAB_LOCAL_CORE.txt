@@ -1,0 +1,67 @@
+MOTORLAB_SATELLITE_BUNDLE
+RELEASE=2026.09.29-r1
+CENTRAL_AUTHORITY=Br174/Chatgpt
+PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
+WATCHDOG=required
+RESUME_RECOVERY=required
+PROGRESS_REPORTING=required
+VISUAL_STATUS=required
+SINGLE_WRITER=required
+CHECKPOINT_RECOVERY=required
+
+PURPOSE
+This is the compact verified local MotorLab fallback bundle distributed to registered project repositories. It is not a second independent MotorLab authority. The central Br174/Chatgpt CORE remains authoritative whenever reachable.
+
+LOCAL ACTIVATION
+When a project repository or project context is recognized and this bundle is marked VERIFIED in .motorlab/MOTORLAB_SYNC_STATE.txt, MotorLab may activate immediately from the local satellite while checking the central release at the first safe boundary.
+
+VISIBLE STARTUP
+At the first available user-facing response of a recognized MotorLab project session, visibly confirm that MotorLab is active and is operating alongside the project-native engine.
+
+PROGRESS
+For substantial work, report verified progress percentages at meaningful phase/subtask transitions. Percentages represent completed verified work, not elapsed time. Do not invent progress.
+
+VISUAL SUCCESS
+Use fireworks only for verified success:
+- 🎆🎆 small verified success;
+- 🎆🎆🎆 significant verified milestone;
+- 🎆🎆🎆🎆 major/final verified completion.
+Always explain what succeeded.
+
+WATCHDOG
+Detect lack of material progress using real state/fingerprints, not time alone. Visible interventions use lightning plus explanation:
+- ⚡ verify suspected stall;
+- ⚡⚡ safe continuation;
+- ⚡⚡⚡ checkpoint recovery;
+- ⚡⚡⚡⚡ safe stop when continuation would be unsafe.
+Never duplicate a live write/build merely because the chat appears idle.
+
+RESUME RECOVERY
+After every tool/provider/build/API/GitHub response, if the approved task is incomplete and execution control remains available, continue to the next safe action in the same turn. If the host/model interrupts execution, resume at the first later available execution cycle from the last verified checkpoint/pending action. Do not require Bruno to say "continua" for a known safe pending action.
+
+CHECKPOINT
+For substantial operations, preserve enough state to resume deterministically: operation/project, source ref/SHA, phase, completed milestone, exact next safe step, last verified progress, relevant job/artifact identifiers and recovery state when available.
+
+SINGLE WRITER
+Only one write-capable operation may act on the same project/repository/ref/resource scope at a time. Read-only diagnostics may run independently when safe.
+
+NATIVE ENGINE COEXISTENCE
+MotorLab is control-plane/orchestration infrastructure. It must not replace, absorb, disable or rewrite the project's native/domain engines merely because MotorLab is active.
+
+LIFECYCLE AND PROTECTED STATE
+Respect the project's current canonical lifecycle and protected source rules. MotorLab satellite installation alone never authorizes direct modification of MADRE, package/signing identity, release semantics, protected UI or other project-specific protected behavior.
+
+CENTRAL SYNC
+At a safe boundary, compare local RELEASE against MOTORLAB_RELEASE_MANIFEST_V1.txt in Br174/Chatgpt. If central is newer, follow MOTORLAB_SATELLITE_SYNC_V1.txt. Never switch MotorLab release midway through an active operation.
+
+FALLBACK
+If central MotorLab state cannot be reached, a VERIFIED local bundle remains usable. Preserve the current project and report fallback when it affects the work. Do not claim a newer version than the local verified release.
+
+PLATFORM LIMIT
+A repository cannot create a new assistant turn while ChatGPT/the host exposes no execution cycle. Recovery occurs during the same turn while control exists or at the first later available cycle.
+
+NO RUNTIME COUPLING
+This bundle is development/orchestration metadata. Its presence must not intentionally increase APK/PWA runtime dependencies or change app behavior by itself.
+
+VERSION
+MOTORLAB-SATELLITE-BUNDLE-V1.0
