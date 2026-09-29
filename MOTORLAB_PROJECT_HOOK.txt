@@ -1,0 +1,26 @@
+MOTORLAB PROJECT HOOK V1
+
+PROJECT_NAME=streamflix-BV
+PROJECT_REPOSITORY=Br174/streamflix-BV
+MOTORLAB_CONTROL_REPOSITORY=Br174/Chatgpt
+MOTORLAB_BOOTSTRAP_MODULE=MOTORLAB_AUTO_BOOTSTRAP_V1.txt
+MOTORLAB_GOVERNANCE_MODULE=MOTORLAB_GOVERNANCE_V1.txt
+MOTORLAB_ACTIVATION_MODE=implicit
+MOTORLAB_PROJECT_CHAT_POLICY=Visionflix-Verlezza-Vision-canonical-chat
+MOTORLAB_NATIVE_ENGINE_POLICY=delivery-adapter-coexist-preserve
+
+PURPOSE
+Persistent delivery-side structural hook for MotorLab. When this repository is used as the Visionflix/Verlezza Vision delivery path, MotorLab is implicitly enabled and must load current canonical control state from Br174/Chatgpt before write-capable delivery/lifecycle operations.
+
+MANDATORY RULES
+1. Do not require Bruno to paste an activation string for delivery operations.
+2. Br174/Chatgpt remains authoritative; this repository is a delivery adapter and never becomes lifecycle authority for Visionflix source.
+3. MotorLab must coexist with and preserve the existing delivery mechanism; it must not replace or rewrite it merely because MotorLab is active.
+4. Before write-capable delivery work, reconcile current CORE/governance/routing/registry and relevant durable job/checkpoint/lock state.
+5. This hook is orchestration metadata only and must not alter Downloader semantics, release payloads or app behavior by itself.
+6. If control state is unavailable, preserve delivery state and report the blocker rather than guessing.
+7. Later canonical MotorLab governance revisions supersede frozen assumptions in this hook.
+
+VERSION
+MOTORLAB-PROJECT-HOOK-V1.0
+Established: 2026-09-29
