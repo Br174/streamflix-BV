@@ -1,5 +1,5 @@
 MOTORLAB_SATELLITE_BUNDLE
-RELEASE=2026.09.29-r1
+RELEASE=2026.09.29-r2
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 WATCHDOG=required
@@ -16,7 +16,9 @@ LOCAL ACTIVATION
 When a project repository or project context is recognized and this bundle is marked VERIFIED in .motorlab/MOTORLAB_SYNC_STATE.txt, MotorLab may activate immediately from the local satellite while checking the central release at the first safe boundary.
 
 VISIBLE STARTUP
-At the first available user-facing response of a recognized MotorLab project session, visibly confirm that MotorLab is active and is operating alongside the project-native engine.
+Normal startup message is exactly:
+"⚙️ MotorLab attivo"
+Do not append satellite, CORE, synchronization or native-engine detail during normal startup. Add technical detail only for a real warning, recovery event or blocker.
 
 PROGRESS
 For substantial work, report verified progress percentages at meaningful phase/subtask transitions. Percentages represent completed verified work, not elapsed time. Do not invent progress.
@@ -64,4 +66,5 @@ NO RUNTIME COUPLING
 This bundle is development/orchestration metadata. Its presence must not intentionally increase APK/PWA runtime dependencies or change app behavior by itself.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V1.0
+MOTORLAB-SATELLITE-BUNDLE-V1.1
+Revision 1.1: release 2026.09.29-r2; normal visible startup shortened to "⚙️ MotorLab attivo".
