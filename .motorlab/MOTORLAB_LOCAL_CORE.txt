@@ -1,9 +1,10 @@
 MOTORLAB_SATELLITE_BUNDLE
-RELEASE=2026.09.29-r2
+RELEASE=2026.09.29-r3
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 WATCHDOG=required
 RESUME_RECOVERY=required
+FOREGROUND_STALL_GUARD=required
 PROGRESS_REPORTING=required
 VISUAL_STATUS=required
 SINGLE_WRITER=required
@@ -19,6 +20,16 @@ VISIBLE STARTUP
 Normal startup message is exactly:
 "⚙️ MotorLab attivo"
 Do not append satellite, CORE, synchronization or native-engine detail during normal startup. Add technical detail only for a real warning, recovery event or blocker.
+
+FOREGROUND STALL GUARD
+Before substantial work, classify the next phase as FOREGROUND_SHORT, FOREGROUND_RISK, BACKGROUNDABLE or USER_BLOCKING.
+For FOREGROUND_RISK/BACKGROUNDABLE phases:
+- create or verify a recoverable checkpoint before entering the phase;
+- record the exact next safe step and last verified progress;
+- prefer a real persistent executor for safe backgroundable work when available and authorized;
+- otherwise divide ordinary-chat work into bounded recoverable segments;
+- do not treat ChatGPT UI "still processing" text, spinner or elapsed time as MotorLab progress or heartbeat;
+- if the host suspends execution, recover at the first later available cycle under Resume Recovery and show lightning when MotorLab actually performs recovery.
 
 PROGRESS
 For substantial work, report verified progress percentages at meaningful phase/subtask transitions. Percentages represent completed verified work, not elapsed time. Do not invent progress.
@@ -60,11 +71,12 @@ FALLBACK
 If central MotorLab state cannot be reached, a VERIFIED local bundle remains usable. Preserve the current project and report fallback when it affects the work. Do not claim a newer version than the local verified release.
 
 PLATFORM LIMIT
-A repository cannot create a new assistant turn while ChatGPT/the host exposes no execution cycle. Recovery occurs during the same turn while control exists or at the first later available cycle.
+A repository cannot create a new assistant turn while ChatGPT/the host exposes no execution cycle. Foreground Stall Guard reduces exposure to that state; Resume Recovery continues at the first later available cycle. Neither is an autonomous wake-up mechanism for a completely suspended host.
 
 NO RUNTIME COUPLING
 This bundle is development/orchestration metadata. Its presence must not intentionally increase APK/PWA runtime dependencies or change app behavior by itself.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V1.1
+MOTORLAB-SATELLITE-BUNDLE-V1.2
 Revision 1.1: release 2026.09.29-r2; normal visible startup shortened to "⚙️ MotorLab attivo".
+Revision 1.2: release 2026.09.29-r3; Foreground Stall Guard added for checkpoint-first long/risky execution and durable handoff when available.
