@@ -1,5 +1,5 @@
 MOTORLAB_SATELLITE_BUNDLE
-RELEASE=2026.09.29-r6
+RELEASE=2026.09.30-r7
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 CHANGE_COMPATIBILITY_GUARD=required
@@ -7,6 +7,7 @@ WATCHDOG=required
 PREVENTIVE_WATCHDOG=required
 MANUAL_LIGHTNING_RECOVERY=required
 MANUAL_LIGHTNING_SAVE_THEN_RESUME=required
+MONOTONIC_RECOVERY_FLOOR=required
 TWO_STRIKE_NO_PROGRESS=required
 RESUME_RECOVERY=required
 FOREGROUND_STALL_GUARD=required
@@ -38,9 +39,9 @@ Atomic changes may use a concise check, but never skip it.
 WATCHDOG COORDINATION
 Watchdog is the single coordinator for progress-health detection and anti-stall intervention.
 - Foreground Stall Guard owns prevention/chunking/durable handoff;
-- Resume Recovery owns checkpoint continuation and manual-lightning Rapid Salvage Checkpoint;
+- Resume Recovery owns checkpoint continuation, manual-lightning Rapid Salvage Checkpoint and monotonic recovery-floor reconstruction;
 - Background Execution owns persistent jobs;
-- Progress Reporting owns user-visible operational status;
+- Progress Reporting owns user-visible operational status and verified percentages;
 - Change Compatibility Guard owns pre-change compatibility.
 Do not run competing recovery paths for the same event.
 
@@ -59,10 +60,11 @@ MANUAL LIGHTNING SAVE-THEN-RESUME
 When Bruno sends only or primarily `⚡`, treat it as a high-priority SAVE-THEN-RESUME request at the first available execution cycle:
 - identify active/pending operation and previous checkpoint;
 - BEFORE any recovery/retry/new write, create or refresh a lightweight MANUAL_LIGHTNING_SALVAGE checkpoint with the freshest recoverable material state currently available;
-- capture when available: current phase, latest completed material step, exact next safe step, pending verification, verified percentage, progress fingerprint, repo/ref, provider/job status/id, artifact/result identity and writer lock scope;
+- capture when available: current phase, latest completed material step, exact next safe step, pending verification, verified percentage, latest user-visible verified MotorLab percentage, progress fingerprint, repo/ref, provider/job status/id, artifact/result identity and writer lock scope;
 - keep salvage bounded and fast: use current known state first and only the smallest targeted read/status probe needed; never do a full repository copy, exhaustive traversal, full log archive or rebuild merely to create the salvage checkpoint;
 - preserve completed work, percentage and single-writer ownership;
-- after salvage, Watchdog classifies health and Resume Recovery continues from the smallest safe pending step;
+- reconstruct the MONOTONIC RECOVERY FLOOR before choosing a continuation point;
+- after salvage, Watchdog classifies health and Resume Recovery continues from the smallest safe pending step compatible with the floor;
 - if healthy external work is still running, do not duplicate/cancel it;
 - if no pending operation exists, say so rather than inventing one.
 
@@ -70,6 +72,25 @@ The salvage checkpoint is state preservation, not a second health coordinator an
 Automatic recovery remains mandatory and does not depend on `⚡`.
 If ChatGPT is fully suspended and does not accept/deliver the message, `⚡` cannot create an execution cycle by itself.
 The command cannot retroactively capture hidden model reasoning that was interrupted before the new cycle; it preserves the freshest observable/recoverable material state available when the cycle begins and reconciles real external state before continuing.
+
+MONOTONIC RECOVERY FLOOR
+For the same logical operation and compatible progress scale:
+- reconcile persisted checkpoint/ledger progress, latest user-visible verified MotorLab progress, verified micro-milestones and current repo/provider/job/artifact evidence;
+- use the highest coherent verified value as recovery_floor_percent;
+- a stale lower checkpoint MUST NOT reduce recovery below newer coherent verified progress;
+- normal recovery may repeat or increase the floor but must not silently go below it;
+- lower recovery is allowed only when material evidence proves previous progress was invalidated or a newly approved operation uses a different progress scale;
+- any such invalidation must be stated visibly with the reason/evidence.
+
+Not valid reasons to lower the floor:
+- interrupted chat/model turn;
+- failed/queued `⚡` send;
+- missing newer checkpoint;
+- older persisted checkpoint;
+- elapsed time;
+- temporary conversation-load failure.
+
+Example: same operation at verified 93% with an older 20% checkpoint resumes at a 93% recovery floor while current job/ref state is reconciled. It does not silently show 20%.
 
 FOREGROUND STALL GUARD
 Before substantial work classify FOREGROUND_SHORT / FOREGROUND_RISK / BACKGROUNDABLE / USER_BLOCKING.
@@ -81,7 +102,8 @@ PROGRESS REPORTING
 For substantial work provide denser live-like operational visibility when the interface permits, normally after roughly 1-2 meaningful operations or material phase/status change.
 Show observable actions/results/current state/next action; do not expose hidden chain-of-thought.
 Percentages remain verified completion only and may repeat with useful new status.
-Preventive/recovery lightning updates should include current verified percentage when available.
+For the same operation, verified progress is monotonic across recovery unless material invalidation evidence is explicitly reported.
+Preventive/recovery lightning updates should include the current recovery floor/verified percentage when available.
 For manual `⚡`, salvage + recovery may be reported in one concise message to avoid needless delay/spam.
 
 WATCHDOG LEVELS
@@ -93,12 +115,13 @@ Visible Watchdog output always includes explanation; the user input `⚡` may be
 
 RESUME RECOVERY
 After each tool/provider/build/API/GitHub response, if approved work is incomplete and control remains, continue same turn.
-After host interruption, first later execution cycle restores checkpoint/pending action and continues safely under Watchdog classification.
-Manual `⚡` first creates/refreshed the lightweight Rapid Salvage Checkpoint, then proceeds to Watchdog classification and safe continuation.
+After host interruption, first later execution cycle restores/reconciles checkpoint, latest verified progress and pending action, reconstructs the recovery floor, and continues safely under Watchdog classification.
+Manual `⚡` first creates/refreshes the lightweight Rapid Salvage Checkpoint, reconstructs the recovery floor, then proceeds to Watchdog classification and safe continuation.
 
 CHECKPOINT / SINGLE WRITER
 Preserve enough state to resume deterministically. Only one writer may act on the same project/repository/ref/resource scope at a time. Independent read-only diagnostics may run safely.
 Manual-lightning salvage is a lightweight checkpoint layer on the same operation, not a second writer.
+A stale checkpoint is continuation metadata, not authority to discard newer coherent verified progress.
 
 NATIVE ENGINE COEXISTENCE
 MotorLab must not replace, absorb, disable or rewrite project-native/domain engines merely because MotorLab is active.
@@ -119,9 +142,10 @@ NO RUNTIME COUPLING
 This is development/orchestration metadata only; it must not intentionally alter app runtime or package weight.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V1.5
+MOTORLAB-SATELLITE-BUNDLE-V1.6
 Revision 1.1: r2 concise startup.
 Revision 1.2: r3 Foreground Stall Guard.
 Revision 1.3: r4 Change Compatibility Guard.
 Revision 1.4: r5 preventive Watchdog, two-strike anti-loop, manual `⚡` recovery and denser operational visibility integrated without competing modules.
 Revision 1.5: r6 manual `⚡` becomes bounded rapid SAVE-THEN-RESUME with a fresh recoverable-state salvage checkpoint before health classification/recovery.
+Revision 1.6: r7 adds MONOTONIC_RECOVERY_FLOOR so stale lower checkpoints cannot silently roll same-operation recovery backward; regressions require explicit material invalidation evidence.
