@@ -5,39 +5,40 @@ PROJECT_REPOSITORY=Br174/streamflix-BV
 MOTORLAB_CONTROL_REPOSITORY=Br174/Chatgpt
 MOTORLAB_CORE_ENTRYPOINT=MOTORLAB_CORE_ENTRYPOINT_V1.txt
 MOTORLAB_RELEASE_MANIFEST=MOTORLAB_RELEASE_MANIFEST_V1.txt
+MOTORLAB_PROJECT_CONTINUITY_MODULE=MOTORLAB_PROJECT_CONTINUITY_V1.txt
+MOTORLAB_PROJECT_STATE=MOTORLAB_PROJECT_STATE_STREAMFLIX_BV_V1.txt
 MOTORLAB_SATELLITE_SYNC_MODULE=MOTORLAB_SATELLITE_SYNC_V1.txt
 MOTORLAB_LOCAL_CORE=.motorlab/MOTORLAB_LOCAL_CORE.txt
 MOTORLAB_LOCAL_LAST_GOOD=.motorlab/MOTORLAB_LOCAL_CORE_LAST_GOOD.txt
 MOTORLAB_LOCAL_SYNC_STATE=.motorlab/MOTORLAB_SYNC_STATE.txt
 MOTORLAB_BOOTSTRAP_MODULE=MOTORLAB_AUTO_BOOTSTRAP_V1.txt
-MOTORLAB_GOVERNANCE_MODULE=MOTORLAB_GOVERNANCE_V1.txt
 MOTORLAB_GLOBAL_PERSISTENT_ACTIVATION_MODULE=MOTORLAB_GLOBAL_PERSISTENT_ACTIVATION_V1.txt
 MOTORLAB_SESSION_BOOT_BANNER_MODULE=MOTORLAB_SESSION_BOOT_BANNER_V1.txt
-MOTORLAB_PROGRESS_REPORTING_MODULE=MOTORLAB_PROGRESS_REPORTING_V1.txt
-MOTORLAB_VISUAL_STATUS_MODULE=MOTORLAB_VISUAL_STATUS_V1.txt
 MOTORLAB_WATCHDOG_MODULE=MOTORLAB_WATCHDOG_V1.txt
 MOTORLAB_RESUME_RECOVERY_MODULE=MOTORLAB_RESUME_RECOVERY_V1.txt
 MOTORLAB_ACTIVATION_MODE=implicit-persistent-local-first
-MOTORLAB_PROJECT_CHAT_POLICY=Visionflix-Verlezza-Vision-canonical-chat
+MOTORLAB_PRE_RESPONSE_BOOT_GATE=required
+MOTORLAB_PROJECT_CONTINUITY=required
+MOTORLAB_PROJECT_CHAT_POLICY=promptless-cross-chat-continuity
 MOTORLAB_NATIVE_ENGINE_POLICY=delivery-adapter-coexist-preserve
 MOTORLAB_VISIBLE_ACTIVATION_PROOF=required
 
 PURPOSE
-Persistent delivery-side MotorLab hook. A recognized streamflix-BV delivery session loads the VERIFIED local satellite first and then checks the central Br174/Chatgpt release at the first safe boundary.
+Persistent streamflix-BV delivery hook. Every recognizable delivery chat activates MotorLab first, reconciles the central delivery continuity ledger with live state, preserves Visionflix as source lifecycle authority and resumes latest verified delivery work without transfer prompts.
 
 MANDATORY RULES
-1. No per-chat manual MotorLab activation string is required for delivery operations.
-2. Load local sync state/core immediately and synchronize only at a safe boundary.
-3. Pin the MotorLab release during an active delivery operation.
-4. Use VERIFIED local/LAST_GOOD fallback if central access is temporarily unavailable.
-5. Show the visible MotorLab startup banner in the first available response.
-6. Apply progress, Watchdog, Resume Recovery and fireworks-success contracts.
-7. Br174/Chatgpt remains authoritative; local files are synchronized satellites.
-8. streamflix-BV remains delivery-only and never becomes lifecycle authority for Visionflix source.
-9. MotorLab must coexist with the existing delivery mechanism and must not alter Downloader semantics, release payloads or app behavior merely because MotorLab is active.
-10. Reconcile repository/ref, checkpoint, pending-action and single-writer state before write-capable delivery work.
+1. MotorLab activates before substantive delivery work and first visible line is "⚙️ MotorLab attivo".
+2. No recurring activation/transfer prompt is required.
+3. Load MOTORLAB_PROJECT_STATE_STREAMFLIX_BV_V1.txt and reconcile live delivery refs/head/releases/jobs/artifacts before choosing a starting point.
+4. Visionflix remains source lifecycle authority; streamflix-BV remains delivery adapter only.
+5. Live newer evidence wins over stale ledger/older registries/memory.
+6. Preserve logical operation/progress/next-safe-step across chat ids.
+7. Unfinished work continues via Resume Recovery + Watchdog before unrelated writes.
+8. Refresh central ledger at material continuation transitions and safe handoff/termination.
+9. MotorLab coexists with the existing delivery mechanism and must not alter Downloader semantics, release payloads or app behavior merely for MotorLab metadata.
+10. Apply Change Compatibility Guard, single-writer and lifecycle protections before writes.
 
 VERSION
-MOTORLAB-PROJECT-HOOK-V1.4
+MOTORLAB-PROJECT-HOOK-V1.5
 Established: 2026-09-29
-Revision 1.4: local-first synchronized satellite with LAST_GOOD fallback and safe-boundary release pinning.
+Revision 1.5: r8 pre-response MotorLab gate plus canonical promptless cross-chat streamflix-BV continuity ledger.
