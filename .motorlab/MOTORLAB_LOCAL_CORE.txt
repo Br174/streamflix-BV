@@ -1,9 +1,12 @@
 MOTORLAB_SATELLITE_BUNDLE
-RELEASE=2026.09.30-r8
+RELEASE=2026.09.30-r10
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
 PROJECT_CONTINUITY=required
+LABELED_VISUAL_STATUS=required
+EXTENDED_VISUAL_STATUS=required
+HIGH_PRESENCE_NUMERIC_PROGRESS=required
 CHANGE_COMPATIBILITY_GUARD=required
 WATCHDOG=required
 PREVENTIVE_WATCHDOG=required
@@ -24,7 +27,7 @@ LOCAL FALLBACK CONTRACT
 - Load project hook and project-specific central continuity ledger automatically.
 - Reconcile ledger with newer live repo/ref/head/provider/job/artifact evidence before choosing a starting point.
 - Preserve active operation, verified progress floor, completed step, pending verification and next safe step across chat ids.
-- No recurring activation prompt or transfer prompt is required.
+- No recurring activation or transfer prompt is required.
 - Live newer evidence outranks stale ledger, older registries and memory summaries.
 - Unfinished work continues through Resume Recovery under Watchdog coordination.
 - Manual ⚡ uses save-then-resume and monotonic recovery-floor rules.
@@ -33,12 +36,63 @@ LOCAL FALLBACK CONTRACT
 - Foreground Stall Guard applies before substantial/risky phases.
 - Only one writer may mutate the same project/ref/resource scope.
 - Project-native/domain engines are preserved and never replaced by MotorLab activation.
-- Satellite metadata must not alter application runtime, UI, package/signing identity or lifecycle.
-- Central release synchronization occurs only at safe boundaries; LAST_GOOD remains available for rollback.
+
+CANONICAL LABELED VISUAL STATUS - R10+
+Every MotorLab status emoji shown to Bruno must include the canonical short label beside it:
+⚙️ MotorLab attivo
+🎆 Azione completata
+⚡ Risveglio / recupero
+✅ Problema risolto
+👍🏻 Procede tutto bene
+⚠️ Piccolo problema risolvibile
+🧭 Cambiare approccio
+🛑 Stop di sicurezza / blocco reale
+♻️ Una parte va rifatta
+💀 Tutto da rifare
+💯 Conclusione definitiva
+🔍 Ricerca soluzione
+🧩 Compatibile
+🐢 Lentezza rilevata
+💭 Elaborazione in corso
+⏳ Attesa esterna
+🧪 Test / verifica in corso
+🔄 Sincronizzazione in corso
+
+VISUAL SEMANTICS
+- preferred format: <emoji> <canonical label> — <context>;
+- repeated-fireworks/repeated-lightning counts are obsolete as user-facing level codes;
+- 🎆 marks an action/phase/milestone completed, not necessarily the whole request;
+- 💯 is reserved only for true end-to-end completion after all requested verification/delivery is complete;
+- 🔍 means solution search/exploration, not success;
+- 🧩 requires compatibility/preflight evidence;
+- 🐢 means slow but still live/legitimate, not automatically stalled;
+- 💭 means high-level operational analysis and never private chain-of-thought;
+- ⏳ means legitimate external provider/job/service waiting;
+- 🧪 means tests/verification are still in progress;
+- 🔄 means synchronization/reconciliation is still in progress;
+- ⚡ remains for actual wake/recovery/health action.
+
+HIGH-PRESENCE NUMERIC PROGRESS - R10+
+Classic form remains:
+Progresso MotorLab: <N>%
+During a substantial operation, once a verified progress value exists, every meaningful user-facing operational status should normally include the current N%, even when unchanged.
+Repeated same percentage is correct when operational state changes without a newly verified milestone.
+Never invent a percentage merely for visibility. Progress remains evidence-based and monotonic.
+Activation-only or trivial administrative messages may omit percentage when no active quantified operation exists.
+
+CENTRAL SYNC
+Compare local release with MOTORLAB_RELEASE_MANIFEST_V1.txt at safe boundaries only. Never switch release mid active write/build/test/promotion. Preserve current verified local bundle as LAST_GOOD before adoption.
+
+FALLBACK
+If central state is unavailable, use VERIFIED local bundle/LAST_GOOD and live project evidence conservatively.
 
 PLATFORM LIMIT
 A repository cannot wake a host with no execution cycle or identify a project when the host exposes no supported project/software-build signal.
 
+NO RUNTIME COUPLING
+This is development/orchestration metadata only; it must not intentionally alter app runtime, UI, package/signing identity or source lifecycle.
+
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V1.7
-Revision 1.7: r8 first-boot gate plus durable promptless cross-chat Project Continuity.
+MOTORLAB-SATELLITE-BUNDLE-V1.9
+Revision 1.8: r9 permanent labeled visual status and final-only 💯.
+Revision 1.9: r10 adds seven labeled operational states and HIGH_PRESENCE_NUMERIC_PROGRESS.
