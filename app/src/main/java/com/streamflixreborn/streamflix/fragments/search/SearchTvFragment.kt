@@ -3,10 +3,10 @@ package com.streamflixreborn.streamflix.fragments.search
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.KeyEvent
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.inputmethod.EditorInfo
@@ -16,6 +16,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.leanback.widget.OnChildViewHolderSelectedListener
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.streamflixreborn.streamflix.R
 import com.streamflixreborn.streamflix.adapters.AppAdapter
@@ -25,6 +26,9 @@ import com.streamflixreborn.streamflix.models.Category
 import com.streamflixreborn.streamflix.models.Genre
 import com.streamflixreborn.streamflix.models.Movie
 import com.streamflixreborn.streamflix.models.TvShow
+import com.streamflixreborn.streamflix.providers.IptvProvider
+import com.streamflixreborn.streamflix.providers.Provider
+import com.streamflixreborn.streamflix.providers.TmdbProvider
 import com.streamflixreborn.streamflix.utils.CacheUtils
 import com.streamflixreborn.streamflix.utils.LoggingUtils
 import com.streamflixreborn.streamflix.utils.UserPreferences
@@ -32,9 +36,6 @@ import com.streamflixreborn.streamflix.utils.VoiceRecognitionHelper
 import com.streamflixreborn.streamflix.utils.hideKeyboard
 import com.streamflixreborn.streamflix.utils.viewModelsFactory
 import kotlinx.coroutines.launch
-import androidx.navigation.fragment.findNavController
-import com.streamflixreborn.streamflix.providers.Provider
-import com.streamflixreborn.streamflix.providers.IptvProvider
 
 class SearchTvFragment : Fragment() {
 
@@ -92,12 +93,11 @@ class SearchTvFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         initializeSearch()
+        initializeAdvancedFilters()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED).collect { state ->
-
                 when (state) {
                     is State.Searching, is State.GlobalSearching -> {
                         binding.isLoading.apply {
@@ -128,7 +128,7 @@ class SearchTvFragment : Fragment() {
                             CacheUtils.clearAppCache(requireContext())
                             Toast.makeText(requireContext(), getString(R.string.clear_cache_done_409), Toast.LENGTH_SHORT).show()
                             if (appAdapter.isLoading) appAdapter.isLoading = false
-                            viewModel.search(viewModel.query)
+                            retryCurrentSearch()
                             return@collect
                         }
                         Toast.makeText(requireContext(), state.error.message ?: "", Toast.LENGTH_SHORT).show()
@@ -138,11 +138,11 @@ class SearchTvFragment : Fragment() {
                             binding.isLoading.apply {
                                 pbIsLoading.visibility = View.GONE
                                 gIsLoadingRetry.visibility = View.VISIBLE
-                                btnIsLoadingRetry.setOnClickListener { viewModel.search(viewModel.query) }
+                                btnIsLoadingRetry.setOnClickListener { retryCurrentSearch() }
                                 btnIsLoadingClearCache.setOnClickListener {
                                     CacheUtils.clearAppCache(requireContext())
                                     Toast.makeText(requireContext(), getString(R.string.clear_cache_done), Toast.LENGTH_SHORT).show()
-                                    viewModel.search(viewModel.query)
+                                    retryCurrentSearch()
                                 }
                                 btnIsLoadingErrorDetails.setOnClickListener {
                                     LoggingUtils.showErrorDialog(requireContext(), state.error)
@@ -164,21 +164,92 @@ class SearchTvFragment : Fragment() {
         _binding = null
     }
 
+    private fun initializeAdvancedFilters() {
+        AdvancedSearchUi.setup(
+            requireContext(),
+            binding.spContentType,
+            binding.spItalian,
+            binding.spYear,
+        )
+
+        binding.btnApplyFilters.setOnClickListener { submitSearch() }
+        binding.btnResetFilters.setOnClickListener {
+            AdvancedSearchUi.reset(
+                binding.spContentType,
+                binding.spItalian,
+                binding.spYear,
+                binding.etDateFrom,
+                binding.etDateTo,
+            )
+            viewModel.search(binding.etSearch.text?.toString().orEmpty())
+        }
+
+        listOf(
+            binding.spContentType,
+            binding.spItalian,
+            binding.spYear,
+            binding.etDateFrom,
+            binding.etDateTo,
+            binding.btnResetFilters,
+            binding.btnApplyFilters,
+        ).forEach { view ->
+            view.setOnKeyListener { _, keyCode, event ->
+                if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_BACK) {
+                    focusSearchContent()
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
     private fun submitSearch(): Boolean {
         val query = binding.etSearch.text?.toString().orEmpty()
         hideKeyboard()
+
+        val filters = try {
+            AdvancedSearchUi.read(
+                binding.spContentType,
+                binding.spItalian,
+                binding.spYear,
+                binding.etDateFrom,
+                binding.etDateTo,
+            )
+        } catch (e: IllegalArgumentException) {
+            Toast.makeText(requireContext(), e.message ?: "Filtro non valido", Toast.LENGTH_SHORT).show()
+            return true
+        }
+
+        if (filters.isActive) {
+            isGlobalSearchChecked = false
+            binding.ivGlobalSearchSwitch.setImageResource(R.drawable.ic_switch_off)
+            if (UserPreferences.currentProvider !is TmdbProvider) {
+                val language = UserPreferences.currentProvider?.language?.takeIf { it.isNotBlank() } ?: "it"
+                UserPreferences.currentProvider = TmdbProvider(language)
+            }
+            viewModel.searchAdvanced(query, filters)
+            return true
+        }
 
         if (isGlobalSearchChecked) {
             if (query.isBlank()) {
                 Toast.makeText(requireContext(), getString(R.string.search_empty_query), Toast.LENGTH_SHORT).show()
                 return true
             }
-            val currentLanguage = UserPreferences.currentProvider?.language ?: "es"
+            val currentLanguage = UserPreferences.currentProvider?.language ?: "it"
             viewModel.searchGlobal(query, currentLanguage)
         } else {
             viewModel.search(query)
         }
         return true
+    }
+
+    private fun retryCurrentSearch() {
+        if (viewModel.advancedFilters.isActive) {
+            viewModel.searchAdvanced(viewModel.query, viewModel.advancedFilters)
+        } else {
+            viewModel.search(viewModel.query)
+        }
     }
 
     private fun initializeSearch() {
@@ -187,7 +258,7 @@ class SearchTvFragment : Fragment() {
         binding.etSearch.hint = getString(hintStringRes)
 
         binding.llGlobalSearch.nextFocusUpId = binding.etSearch.id
-        binding.vgvSearch.nextFocusUpId = binding.llGlobalSearch.id
+        binding.vgvSearch.nextFocusUpId = binding.btnApplyFilters.id
 
         binding.llGlobalSearch.setOnClickListener {
             isGlobalSearchChecked = !isGlobalSearchChecked
@@ -198,48 +269,29 @@ class SearchTvFragment : Fragment() {
 
         binding.etSearch.apply {
             setOnEditorActionListener { _, actionId, event ->
-                val isSubmitAction =
-                    actionId == EditorInfo.IME_ACTION_SEARCH ||
-                        actionId == EditorInfo.IME_ACTION_DONE ||
-                        actionId == EditorInfo.IME_NULL
-                val isSubmitKey =
-                    event?.action == KeyEvent.ACTION_DOWN &&
-                        (event.keyCode == KeyEvent.KEYCODE_ENTER ||
-                            event.keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER)
+                val isSubmitAction = actionId == EditorInfo.IME_ACTION_SEARCH ||
+                    actionId == EditorInfo.IME_ACTION_DONE ||
+                    actionId == EditorInfo.IME_NULL
+                val isSubmitKey = event?.action == KeyEvent.ACTION_DOWN &&
+                    (event.keyCode == KeyEvent.KEYCODE_ENTER || event.keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER)
 
-                if (isSubmitAction || isSubmitKey) {
-                    return@setOnEditorActionListener submitSearch()
-                }
-                return@setOnEditorActionListener false
+                if (isSubmitAction || isSubmitKey) return@setOnEditorActionListener submitSearch()
+                false
             }
 
             setOnKeyListener { _, keyCode, event ->
-                if (event.action != KeyEvent.ACTION_DOWN) {
-                    return@setOnKeyListener false
-                }
-
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    return@setOnKeyListener focusSearchContent()
-                }
-
-                if (
-                    keyCode == KeyEvent.KEYCODE_ENTER ||
+                if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+                if (keyCode == KeyEvent.KEYCODE_BACK) return@setOnKeyListener focusSearchContent()
+                if (keyCode == KeyEvent.KEYCODE_ENTER ||
                     keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER ||
                     keyCode == KeyEvent.KEYCODE_SEARCH
-                ) {
-                    return@setOnKeyListener submitSearch()
-                }
-
+                ) return@setOnKeyListener submitSearch()
                 false
             }
 
             addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
-                    if (s.isNullOrBlank()) {
-                                val isIptv = UserPreferences.currentProvider is IptvProvider
-        val hintStringRes = if (isIptv) R.string.search_input_hint_iptv else R.string.search_input_hint
-        binding.etSearch.hint = getString(hintStringRes)
-                    }
+                    if (s.isNullOrBlank()) binding.etSearch.hint = getString(R.string.search_input_hint)
                 }
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -257,16 +309,14 @@ class SearchTvFragment : Fragment() {
             onResult = { query ->
                 binding.btnSearchVoice.clearAnimation()
                 binding.etSearch.setText(query)
-                viewModel.search(query)
+                submitSearch()
             },
             onError = { msg ->
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                 binding.btnSearchVoice.clearAnimation()
-                        val isIptv = UserPreferences.currentProvider is IptvProvider
-        val hintStringRes = if (isIptv) R.string.search_input_hint_iptv else R.string.search_input_hint
-        binding.etSearch.hint = getString(hintStringRes)
+                binding.etSearch.hint = getString(R.string.search_input_hint)
             },
-            onListeningStateChanged = { isListening ->
+            onListeningStateChanged = {
                 binding.btnSearchVoice.startAnimation(blink)
                 binding.etSearch.hint = getString(R.string.voice_prompt)
             }
@@ -282,18 +332,14 @@ class SearchTvFragment : Fragment() {
             view.setOnKeyListener { _, keyCode, event ->
                 if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_BACK) {
                     focusSearchContent()
-                } else {
-                    false
-                }
+                } else false
             }
         }
 
         binding.btnSearchClear.setOnClickListener {
             binding.etSearch.setText("")
-                    val isIptv = UserPreferences.currentProvider is IptvProvider
-        val hintStringRes = if (isIptv) R.string.search_input_hint_iptv else R.string.search_input_hint
-        binding.etSearch.hint = getString(hintStringRes)
-            viewModel.search("")
+            binding.etSearch.hint = getString(R.string.search_input_hint)
+            submitSearch()
         }
 
         binding.vgvSearch.apply {
@@ -309,8 +355,7 @@ class SearchTvFragment : Fragment() {
                     subposition: Int,
                 ) {
                     child?.itemView?.nextFocusUpId =
-                        if (position in 0 until currentGridColumns) binding.llGlobalSearch.id
-                        else View.NO_ID
+                        if (position in 0 until currentGridColumns) binding.btnApplyFilters.id else View.NO_ID
                 }
             })
         }
@@ -321,18 +366,15 @@ class SearchTvFragment : Fragment() {
     private fun focusSearchContent(): Boolean {
         val hasResults = appAdapter.itemCount > 0 && binding.vgvSearch.visibility == View.VISIBLE
         return when {
-            hasResults -> {
-                binding.vgvSearch.requestFocus()
-            }
-            binding.llGlobalSearch.visibility == View.VISIBLE -> {
-                binding.llGlobalSearch.requestFocus()
-            }
+            hasResults -> binding.vgvSearch.requestFocus()
+            binding.btnApplyFilters.visibility == View.VISIBLE -> binding.btnApplyFilters.requestFocus()
+            binding.llGlobalSearch.visibility == View.VISIBLE -> binding.llGlobalSearch.requestFocus()
             else -> false
         }
     }
 
     private fun displaySearch(list: List<AppAdapter.Item>, hasMore: Boolean) {
-        currentGridColumns = if (viewModel.query == "") 5 else 6
+        currentGridColumns = if (viewModel.query.isEmpty() && !viewModel.advancedFilters.isActive) 5 else 6
         binding.vgvSearch.setNumColumns(currentGridColumns)
 
         appAdapter.submitList(list.onEach {
@@ -343,7 +385,7 @@ class SearchTvFragment : Fragment() {
             }
         })
 
-        if (hasMore && viewModel.query != "") {
+        if (hasMore && (viewModel.query.isNotEmpty() || viewModel.advancedFilters.isActive)) {
             appAdapter.setOnLoadMoreListener { viewModel.loadMore() }
         } else {
             appAdapter.setOnLoadMoreListener(null)
@@ -375,7 +417,7 @@ class SearchTvFragment : Fragment() {
         }
 
         currentGridColumns = 1
-        binding.vgvSearch.setNumColumns(currentGridColumns) // La lista de categorías es una sola columna vertical
+        binding.vgvSearch.setNumColumns(currentGridColumns)
         appAdapter.submitList(categories)
         appAdapter.setOnLoadMoreListener(null)
     }

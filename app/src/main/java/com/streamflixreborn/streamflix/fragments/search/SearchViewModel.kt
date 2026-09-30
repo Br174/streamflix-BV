@@ -7,12 +7,20 @@ import com.streamflixreborn.streamflix.adapters.AppAdapter
 import com.streamflixreborn.streamflix.database.AppDatabase
 import com.streamflixreborn.streamflix.models.Movie
 import com.streamflixreborn.streamflix.models.TvShow
+import com.streamflixreborn.streamflix.providers.AdvancedSearchFilters
 import com.streamflixreborn.streamflix.providers.IptvProvider
 import com.streamflixreborn.streamflix.providers.Provider
+import com.streamflixreborn.streamflix.providers.TmdbProvider
 import com.streamflixreborn.streamflix.utils.ParentalControlUtils
+import com.streamflixreborn.streamflix.utils.TMDb3
+import com.streamflixreborn.streamflix.utils.TMDb3.original
+import com.streamflixreborn.streamflix.utils.TMDb3.w500
 import com.streamflixreborn.streamflix.utils.UserPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -21,7 +29,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 
-// DEFINICIONES DE ESTADO Y RESULTADOS (Fuera de la clase para mejor acceso)
 sealed class State {
     data object Searching : State()
     data object SearchingMore : State()
@@ -42,23 +49,19 @@ data class ProviderResult(
     }
 }
 
-
 class SearchViewModel(database: AppDatabase) : ViewModel() {
 
     private val _state = MutableStateFlow<State>(State.Searching)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val state: Flow<State> = combine(
         _state,
         _state.transformLatest { state ->
             when (state) {
                 is State.SuccessSearching -> {
-                    val movies = state.results
-                        .filterIsInstance<Movie>()
-                    if (movies.isEmpty()) {
-                        emit(emptyList())
-                    } else {
-                        emitAll(database.movieDao().getByIds(movies.map { it.id }))
-                    }
+                    val movies = state.results.filterIsInstance<Movie>()
+                    if (movies.isEmpty()) emit(emptyList())
+                    else emitAll(database.movieDao().getByIds(movies.map { it.id }))
                 }
                 else -> emit(emptyList<Movie>())
             }
@@ -66,13 +69,9 @@ class SearchViewModel(database: AppDatabase) : ViewModel() {
         _state.transformLatest { state ->
             when (state) {
                 is State.SuccessSearching -> {
-                    val tvShows = state.results
-                        .filterIsInstance<TvShow>()
-                    if (tvShows.isEmpty()) {
-                        emit(emptyList())
-                    } else {
-                        emitAll(database.tvShowDao().getByIds(tvShows.map { it.id }))
-                    }
+                    val tvShows = state.results.filterIsInstance<TvShow>()
+                    if (tvShows.isEmpty()) emit(emptyList())
+                    else emitAll(database.tvShowDao().getByIds(tvShows.map { it.id }))
                 }
                 else -> emit(emptyList<TvShow>())
             }
@@ -82,7 +81,6 @@ class SearchViewModel(database: AppDatabase) : ViewModel() {
             is State.SuccessSearching -> {
                 val moviesById = moviesDb.associateBy { it.id }
                 val tvShowsById = tvShowsDb.associateBy { it.id }
-
                 State.SuccessSearching(
                     results = state.results.map { item ->
                         when (item) {
@@ -97,7 +95,7 @@ class SearchViewModel(database: AppDatabase) : ViewModel() {
                             else -> item
                         }
                     },
-                    hasMore = state.hasMore
+                    hasMore = state.hasMore,
                 )
             }
             else -> state
@@ -105,6 +103,8 @@ class SearchViewModel(database: AppDatabase) : ViewModel() {
     }.flowOn(Dispatchers.IO)
 
     var query = ""
+    var advancedFilters = AdvancedSearchFilters()
+        private set
     private var page = 1
 
     init {
@@ -112,15 +112,36 @@ class SearchViewModel(database: AppDatabase) : ViewModel() {
     }
 
     fun search(query: String) = viewModelScope.launch(Dispatchers.IO) {
-        _state.emit(State.Searching)
+        advancedFilters = AdvancedSearchFilters()
+        executeSearch(query, advancedFilters, 1)
+    }
 
+    fun searchAdvanced(query: String, filters: AdvancedSearchFilters) =
+        viewModelScope.launch(Dispatchers.IO) {
+            advancedFilters = normalizeFilters(filters)
+            executeSearch(query, advancedFilters, 1)
+        }
+
+    private suspend fun executeSearch(
+        query: String,
+        filters: AdvancedSearchFilters,
+        targetPage: Int,
+    ) {
+        _state.emit(State.Searching)
         try {
-            val results = ParentalControlUtils.filterItems(UserPreferences.currentProvider!!.search(query))
+            val provider = UserPreferences.currentProvider!!
+            val results = if (filters.isActive && provider is TmdbProvider) {
+                searchTmdbAdvanced(provider, query, filters, targetPage)
+            } else {
+                provider.search(query, targetPage)
+            }
+
             this@SearchViewModel.query = query
-            page = 1
-            _state.emit(State.SuccessSearching(results, results.isNotEmpty()))
+            page = targetPage
+            val filtered = ParentalControlUtils.filterItems(results)
+            _state.emit(State.SuccessSearching(filtered, filtered.isNotEmpty()))
         } catch (e: Exception) {
-            Log.e("SearchViewModel", "search: ", e)
+            Log.e("SearchViewModel", "executeSearch: ", e)
             _state.emit(State.FailedSearching(e))
         }
     }
@@ -130,15 +151,21 @@ class SearchViewModel(database: AppDatabase) : ViewModel() {
         if (currentState is State.SuccessSearching) {
             _state.emit(State.SearchingMore)
             try {
-                val results = ParentalControlUtils.filterItems(
-                    UserPreferences.currentProvider!!.search(query, page + 1)
-                )
+                val provider = UserPreferences.currentProvider!!
+                val nextPage = page + 1
+                val results = if (advancedFilters.isActive && provider is TmdbProvider) {
+                    searchTmdbAdvanced(provider, query, advancedFilters, nextPage)
+                } else {
+                    provider.search(query, nextPage)
+                }
+
+                val filtered = ParentalControlUtils.filterItems(results)
                 val existingKeys = currentState.results
                     .asSequence()
                     .map { it.searchIdentityKey() }
                     .toHashSet()
-                val newUniqueResults = results.filterNot { it.searchIdentityKey() in existingKeys }
-                page += 1
+                val newUniqueResults = filtered.filterNot { it.searchIdentityKey() in existingKeys }
+                page = nextPage
                 _state.emit(
                     State.SuccessSearching(
                         results = currentState.results + newUniqueResults,
@@ -152,7 +179,102 @@ class SearchViewModel(database: AppDatabase) : ViewModel() {
         }
     }
 
-    // FUNCIÓN DE BÚSQUEDA GLOBAL AÑADIDA
+    private fun normalizeFilters(filters: AdvancedSearchFilters): AdvancedSearchFilters {
+        val hasRange = !filters.dateFrom.isNullOrBlank() || !filters.dateTo.isNullOrBlank()
+        return if (hasRange) filters.copy(year = null) else filters
+    }
+
+    private suspend fun searchTmdbAdvanced(
+        provider: TmdbProvider,
+        query: String,
+        filters: AdvancedSearchFilters,
+        page: Int,
+    ): List<AppAdapter.Item> = coroutineScope {
+        val includeMovies = filters.type == AdvancedSearchFilters.ContentType.ALL ||
+            filters.type == AdvancedSearchFilters.ContentType.MOVIE ||
+            filters.type == AdvancedSearchFilters.ContentType.CARTOON
+        val includeTv = filters.type == AdvancedSearchFilters.ContentType.ALL ||
+            filters.type == AdvancedSearchFilters.ContentType.TV ||
+            filters.type == AdvancedSearchFilters.ContentType.CARTOON
+
+        val language = provider.language
+        val italianOnly = filters.italian == AdvancedSearchFilters.ItalianFilter.YES
+        val excludeItalian = filters.italian == AdvancedSearchFilters.ItalianFilter.NO
+        val cartoonOnly = filters.type == AdvancedSearchFilters.ContentType.CARTOON
+
+        val movieDeferred = if (includeMovies) async {
+            val params = mutableMapOf(
+                "language" to language,
+                "page" to page.toString(),
+                "sort_by" to "popularity.desc",
+                "include_adult" to "false",
+            )
+            if (italianOnly) params["with_original_language"] = "it"
+            if (cartoonOnly) params["with_genres"] = "16"
+            filters.year?.let { params["primary_release_year"] = it.toString() }
+            filters.dateFrom?.takeIf { it.isNotBlank() }?.let { params["primary_release_date.gte"] = it }
+            filters.dateTo?.takeIf { it.isNotBlank() }?.let { params["primary_release_date.lte"] = it }
+            TMDb3.Discover.movie(params).results
+        } else null
+
+        val tvDeferred = if (includeTv) async {
+            val params = mutableMapOf(
+                "language" to language,
+                "page" to page.toString(),
+                "sort_by" to "popularity.desc",
+                "include_adult" to "false",
+            )
+            if (italianOnly) params["with_original_language"] = "it"
+            if (cartoonOnly) params["with_genres"] = "16"
+            filters.year?.let { params["first_air_date_year"] = it.toString() }
+            filters.dateFrom?.takeIf { it.isNotBlank() }?.let { params["first_air_date.gte"] = it }
+            filters.dateTo?.takeIf { it.isNotBlank() }?.let { params["first_air_date.lte"] = it }
+            TMDb3.Discover.tv(params).results
+        } else null
+
+        val movieItems = movieDeferred?.await().orEmpty()
+            .asSequence()
+            .filter { !excludeItalian || it.originalLanguage != "it" }
+            .filter { query.isBlank() || it.title.contains(query, ignoreCase = true) || it.originalTitle.contains(query, ignoreCase = true) }
+            .map { movie ->
+                Movie(
+                    id = movie.id.toString(),
+                    title = movie.title,
+                    overview = movie.overview,
+                    released = movie.releaseDate,
+                    rating = movie.voteAverage.toDouble(),
+                    poster = movie.posterPath?.w500,
+                    banner = movie.backdropPath?.original,
+                ) as AppAdapter.Item
+            }
+            .toList()
+
+        val tvItems = tvDeferred?.await().orEmpty()
+            .asSequence()
+            .filter { !excludeItalian || it.originalLanguage != "it" }
+            .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) || it.originalName.contains(query, ignoreCase = true) }
+            .map { tv ->
+                TvShow(
+                    id = tv.id.toString(),
+                    title = tv.name,
+                    overview = tv.overview,
+                    released = tv.firstAirDate,
+                    rating = tv.voteAverage.toDouble(),
+                    poster = tv.posterPath?.w500,
+                    banner = tv.backdropPath?.original,
+                ) as AppAdapter.Item
+            }
+            .toList()
+
+        (movieItems + tvItems).sortedByDescending {
+            when (it) {
+                is Movie -> it.rating
+                is TvShow -> it.rating
+                else -> 0.0
+            }
+        }
+    }
+
     fun searchGlobal(query: String, currentLanguage: String) = viewModelScope.launch(Dispatchers.IO) {
         _state.emit(State.GlobalSearching)
 
@@ -172,7 +294,6 @@ class SearchViewModel(database: AppDatabase) : ViewModel() {
         _state.emit(State.SuccessGlobalSearching(initialResults))
 
         val mutableResults = initialResults.toMutableList()
-
         val stateComparator = compareBy<ProviderResult> { providerResult ->
             when (val state = providerResult.state) {
                 is ProviderResult.State.Success -> if (state.results.isNotEmpty()) 1 else 3
@@ -185,13 +306,10 @@ class SearchViewModel(database: AppDatabase) : ViewModel() {
             launch {
                 try {
                     val results = ParentalControlUtils.filterItems(provider.search(query).onEach { item ->
-                        // ========= ¡AQUÍ ESTÁ LA MAGIA! =========
-                        // Le ponemos el sello a cada resultado
                         when (item) {
                             is Movie -> item.providerName = provider.name
                             is TvShow -> item.providerName = provider.name
                         }
-                        // =======================================
                     })
                     mutableResults[index] = ProviderResult(provider, ProviderResult.State.Success(results))
                 } catch (e: Exception) {

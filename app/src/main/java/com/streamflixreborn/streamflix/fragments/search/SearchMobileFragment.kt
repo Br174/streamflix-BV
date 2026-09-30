@@ -23,29 +23,27 @@ import com.streamflixreborn.streamflix.models.Category
 import com.streamflixreborn.streamflix.models.Genre
 import com.streamflixreborn.streamflix.models.Movie
 import com.streamflixreborn.streamflix.models.TvShow
+import com.streamflixreborn.streamflix.providers.IptvProvider
+import com.streamflixreborn.streamflix.providers.TmdbProvider
 import com.streamflixreborn.streamflix.ui.SpacingItemDecoration
 import com.streamflixreborn.streamflix.utils.CacheUtils
 import com.streamflixreborn.streamflix.utils.LoggingUtils
-import com.streamflixreborn.streamflix.utils.UserPreferences // <-- IMPORT AÑADIDO
+import com.streamflixreborn.streamflix.utils.UserPreferences
 import com.streamflixreborn.streamflix.utils.VoiceRecognitionHelper
 import com.streamflixreborn.streamflix.utils.dp
 import com.streamflixreborn.streamflix.utils.hideKeyboard
 import com.streamflixreborn.streamflix.utils.viewModelsFactory
 import kotlinx.coroutines.launch
-import com.streamflixreborn.streamflix.providers.IptvProvider
 
 class SearchMobileFragment : Fragment() {
 
     private var hasAutoCleared409: Boolean = false
-
     private var _binding: FragmentSearchMobileBinding? = null
     private val binding get() = _binding!!
 
     private val database by lazy { AppDatabase.getInstance(requireContext()) }
     private val viewModel by viewModelsFactory { SearchViewModel(database) }
-
     private var appAdapter = AppAdapter()
-
     private lateinit var voiceHelper: VoiceRecognitionHelper
 
     override fun onCreateView(
@@ -59,12 +57,11 @@ class SearchMobileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         initializeSearch()
+        initializeAdvancedFilters()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED).collect { state ->
-                // ========= BLOQUE WHEN MODIFICADO =========
                 when (state) {
                     is State.Searching, is State.GlobalSearching -> {
                         binding.isLoading.apply {
@@ -90,27 +87,22 @@ class SearchMobileFragment : Fragment() {
                         if (code == 409 && !hasAutoCleared409) {
                             hasAutoCleared409 = true
                             CacheUtils.clearAppCache(requireContext())
-                            android.widget.Toast.makeText(requireContext(), getString(com.streamflixreborn.streamflix.R.string.clear_cache_done_409), android.widget.Toast.LENGTH_SHORT).show()
-                            viewModel.search(viewModel.query)
+                            Toast.makeText(requireContext(), getString(R.string.clear_cache_done_409), Toast.LENGTH_SHORT).show()
+                            retryCurrentSearch()
                             return@collect
                         }
-                        Toast.makeText(
-                            requireContext(),
-                            state.error.message ?: "",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(requireContext(), state.error.message ?: "", Toast.LENGTH_SHORT).show()
                         if (appAdapter.isLoading) {
                             appAdapter.isLoading = false
                         } else {
                             binding.isLoading.apply {
                                 pbIsLoading.visibility = View.GONE
                                 gIsLoadingRetry.visibility = View.VISIBLE
-                                val doRetry = { viewModel.search(viewModel.query) }
-                                btnIsLoadingRetry.setOnClickListener { doRetry() }
+                                btnIsLoadingRetry.setOnClickListener { retryCurrentSearch() }
                                 btnIsLoadingClearCache.setOnClickListener {
                                     CacheUtils.clearAppCache(requireContext())
-                                    android.widget.Toast.makeText(requireContext(), getString(com.streamflixreborn.streamflix.R.string.clear_cache_done), android.widget.Toast.LENGTH_SHORT).show()
-                                    doRetry()
+                                    Toast.makeText(requireContext(), getString(R.string.clear_cache_done), Toast.LENGTH_SHORT).show()
+                                    retryCurrentSearch()
                                 }
                                 btnIsLoadingErrorDetails.setOnClickListener {
                                     LoggingUtils.showErrorDialog(requireContext(), state.error)
@@ -119,7 +111,6 @@ class SearchMobileFragment : Fragment() {
                         }
                     }
                 }
-                // ===========================================
             }
         }
     }
@@ -130,41 +121,92 @@ class SearchMobileFragment : Fragment() {
         _binding = null
     }
 
+    private fun initializeAdvancedFilters() {
+        AdvancedSearchUi.setup(
+            requireContext(),
+            binding.spContentType,
+            binding.spItalian,
+            binding.spYear,
+        )
+
+        binding.btnApplyFilters.setOnClickListener { submitSearch() }
+        binding.btnResetFilters.setOnClickListener {
+            AdvancedSearchUi.reset(
+                binding.spContentType,
+                binding.spItalian,
+                binding.spYear,
+                binding.etDateFrom,
+                binding.etDateTo,
+            )
+            viewModel.search(binding.etSearch.text?.toString().orEmpty())
+        }
+    }
+
+    private fun submitSearch(): Boolean {
+        val query = binding.etSearch.text?.toString().orEmpty()
+        hideKeyboard()
+
+        val filters = try {
+            AdvancedSearchUi.read(
+                binding.spContentType,
+                binding.spItalian,
+                binding.spYear,
+                binding.etDateFrom,
+                binding.etDateTo,
+            )
+        } catch (e: IllegalArgumentException) {
+            Toast.makeText(requireContext(), e.message ?: "Filtro non valido", Toast.LENGTH_SHORT).show()
+            return true
+        }
+
+        if (filters.isActive) {
+            binding.swGlobalSearch.isChecked = false
+            if (UserPreferences.currentProvider !is TmdbProvider) {
+                val language = UserPreferences.currentProvider?.language?.takeIf { it.isNotBlank() } ?: "it"
+                UserPreferences.currentProvider = TmdbProvider(language)
+            }
+            viewModel.searchAdvanced(query, filters)
+            return true
+        }
+
+        if (binding.swGlobalSearch.isChecked) {
+            if (query.isBlank()) {
+                Toast.makeText(requireContext(), getString(R.string.search_empty_query), Toast.LENGTH_SHORT).show()
+                return true
+            }
+            val currentLanguage = UserPreferences.currentProvider?.language ?: "it"
+            viewModel.searchGlobal(query, currentLanguage)
+        } else {
+            viewModel.search(query)
+        }
+        return true
+    }
+
+    private fun retryCurrentSearch() {
+        if (viewModel.advancedFilters.isActive) {
+            viewModel.searchAdvanced(viewModel.query, viewModel.advancedFilters)
+        } else {
+            viewModel.search(viewModel.query)
+        }
+    }
+
     private fun initializeSearch() {
         val isIptv = UserPreferences.currentProvider is IptvProvider
         val hintStringRes = if (isIptv) R.string.search_input_hint_iptv else R.string.search_input_hint
         binding.etSearch.hint = getString(hintStringRes)
 
         binding.etSearch.apply {
-            // ========= LÓGICA DE BÚSQUEDA MODIFICADA =========
             setOnEditorActionListener { _, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    val query = binding.etSearch.text.toString()
-                    hideKeyboard()
-
-                    if (query.isBlank()) {
-                        Toast.makeText(requireContext(), getString(R.string.search_empty_query), Toast.LENGTH_SHORT).show()
-                        return@setOnEditorActionListener true
-                    }
-
-                    if (binding.swGlobalSearch.isChecked) {
-                        val currentLanguage = UserPreferences.currentProvider?.language ?: "es"
-                        viewModel.searchGlobal(query, currentLanguage)
-                    } else {
-                        viewModel.search(query)
-                    }
-                    return@setOnEditorActionListener true
-                }
-                return@setOnEditorActionListener false
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) return@setOnEditorActionListener submitSearch()
+                false
             }
-            // =================================================
 
             addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
-                    if(s.isNullOrBlank()){
-                                val isIptv = UserPreferences.currentProvider is IptvProvider
-        val hintStringRes = if (isIptv) R.string.search_input_hint_iptv else R.string.search_input_hint
-        binding.etSearch.hint = getString(hintStringRes)
+                    if (s.isNullOrBlank()) {
+                        val currentIsIptv = UserPreferences.currentProvider is IptvProvider
+                        val res = if (currentIsIptv) R.string.search_input_hint_iptv else R.string.search_input_hint
+                        binding.etSearch.hint = getString(res)
                     }
                 }
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -183,16 +225,14 @@ class SearchMobileFragment : Fragment() {
             onResult = { query ->
                 binding.btnSearchVoice.clearAnimation()
                 binding.etSearch.setText(query)
-                viewModel.search(query)
+                submitSearch()
             },
             onError = { msg ->
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                 binding.btnSearchVoice.clearAnimation()
-                        val isIptv = UserPreferences.currentProvider is IptvProvider
-        val hintStringRes = if (isIptv) R.string.search_input_hint_iptv else R.string.search_input_hint
-        binding.etSearch.hint = getString(hintStringRes)
+                binding.etSearch.hint = getString(R.string.search_input_hint)
             },
-            onListeningStateChanged = { isListening ->
+            onListeningStateChanged = {
                 binding.btnSearchVoice.startAnimation(blink)
                 binding.etSearch.hint = getString(R.string.voice_prompt)
             }
@@ -200,31 +240,23 @@ class SearchMobileFragment : Fragment() {
 
         binding.btnSearchVoice.apply {
             requestFocus()
-            visibility =
-                if (voiceHelper.isAvailable()) View.VISIBLE else View.GONE
-
+            visibility = if (voiceHelper.isAvailable()) View.VISIBLE else View.GONE
             setOnClickListener {
-                if (!voiceHelper.isListening) {
-                    voiceHelper.startWithPermissionCheck()
-                }
+                if (!voiceHelper.isListening) voiceHelper.startWithPermissionCheck()
             }
         }
 
         binding.btnSearchClear.setOnClickListener {
             binding.etSearch.setText("")
-                    val isIptv = UserPreferences.currentProvider is IptvProvider
-        val hintStringRes = if (isIptv) R.string.search_input_hint_iptv else R.string.search_input_hint
-        binding.etSearch.hint = getString(hintStringRes)
-            viewModel.search("")
+            binding.etSearch.hint = getString(R.string.search_input_hint)
+            submitSearch()
         }
 
         binding.rvSearch.apply {
             adapter = appAdapter.apply {
                 stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
             }
-            addItemDecoration(
-                SpacingItemDecoration(10.dp(requireContext()))
-            )
+            addItemDecoration(SpacingItemDecoration(10.dp(requireContext())))
         }
     }
 
@@ -237,14 +269,13 @@ class SearchMobileFragment : Fragment() {
             }
         })
 
-        if (hasMore && viewModel.query != "") {
+        if (hasMore && (viewModel.query.isNotEmpty() || viewModel.advancedFilters.isActive)) {
             appAdapter.setOnLoadMoreListener { viewModel.loadMore() }
         } else {
             appAdapter.setOnLoadMoreListener(null)
         }
     }
 
-    // ========= NUEVA FUNCIÓN PARA MOSTRAR RESULTADOS GLOBALES =========
     private fun displayGlobalSearch(providerResults: List<ProviderResult>) {
         val allItems = mutableListOf<AppAdapter.Item>()
 
@@ -259,27 +290,23 @@ class SearchMobileFragment : Fragment() {
                 }
             }
 
-            val header = Category(
-                name = headerTitle,
-                list = emptyList()
-            ).apply {
-                itemType = AppAdapter.Type.CATEGORY_MOBILE_ITEM
-            }
-            allItems.add(header)
+            allItems.add(
+                Category(name = headerTitle, list = emptyList()).apply {
+                    itemType = AppAdapter.Type.CATEGORY_MOBILE_ITEM
+                }
+            )
 
             if (providerResult.state is ProviderResult.State.Success) {
-                val results = providerResult.state.results.onEach {
+                allItems.addAll(providerResult.state.results.onEach {
                     when (it) {
                         is Movie -> it.itemType = AppAdapter.Type.MOVIE_GRID_MOBILE_ITEM
                         is TvShow -> it.itemType = AppAdapter.Type.TV_SHOW_GRID_MOBILE_ITEM
                     }
-                }
-                allItems.addAll(results)
+                })
             }
         }
 
         appAdapter.submitList(allItems)
-        appAdapter.setOnLoadMoreListener(null) // Desactivamos la carga infinita en la búsqueda global
+        appAdapter.setOnLoadMoreListener(null)
     }
-    // ================================================================
 }
