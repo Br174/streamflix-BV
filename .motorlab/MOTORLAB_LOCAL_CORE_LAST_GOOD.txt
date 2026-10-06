@@ -1,5 +1,5 @@
 MOTORLAB_SATELLITE_BUNDLE
-RELEASE=2026.09.30-r10
+RELEASE=2026.09.30-r11
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -7,6 +7,10 @@ PROJECT_CONTINUITY=required
 LABELED_VISUAL_STATUS=required
 EXTENDED_VISUAL_STATUS=required
 HIGH_PRESENCE_NUMERIC_PROGRESS=required
+HARD_PROGRESS_VISIBILITY=required
+ROOT_CAUSE_CLOSURE=required
+LIVE_EVENT_CLASSIFICATION=required
+CONTROL_PLANE_CI_SUPPRESSION=required
 CHANGE_COMPATIBILITY_GUARD=required
 WATCHDOG=required
 PREVENTIVE_WATCHDOG=required
@@ -26,18 +30,21 @@ LOCAL FALLBACK CONTRACT
 - First user-visible line: ⚙️ MotorLab attivo
 - Load project hook and project-specific central continuity ledger automatically.
 - Reconcile ledger with newer live repo/ref/head/provider/job/artifact evidence before choosing a starting point.
+- Classify newer live events as application work, MotorLab control-plane activity, external automation or unknown-before-reconcile before changing app lifecycle identity.
 - Preserve active operation, verified progress floor, completed step, pending verification and next safe step across chat ids.
 - No recurring activation or transfer prompt is required.
 - Live newer evidence outranks stale ledger, older registries and memory summaries.
 - Unfinished work continues through Resume Recovery under Watchdog coordination.
 - Manual ⚡ uses save-then-resume and monotonic recovery-floor rules.
 - Project Continuity updates at material state transitions and safe turn handoff when central write access exists.
+- A missed expected write-through is a Root Cause Closure problem; manual alignment alone is not definitive closure.
+- MotorLab-only control-plane commits should suppress unrelated CI/build triggers when the provider supports a safe skip mechanism, and repository trigger filters should exclude MotorLab-only paths where appropriate.
 - Change Compatibility Guard applies before writes.
 - Foreground Stall Guard applies before substantial/risky phases.
 - Only one writer may mutate the same project/ref/resource scope.
 - Project-native/domain engines are preserved and never replaced by MotorLab activation.
 
-CANONICAL LABELED VISUAL STATUS - R10+
+CANONICAL LABELED VISUAL STATUS
 Every MotorLab status emoji shown to Bruno must include the canonical short label beside it:
 ⚙️ MotorLab attivo
 🎆 Azione completata
@@ -63,7 +70,8 @@ VISUAL SEMANTICS
 - repeated-fireworks/repeated-lightning counts are obsolete as user-facing level codes;
 - 🎆 marks an action/phase/milestone completed, not necessarily the whole request;
 - 💯 is reserved only for true end-to-end completion after all requested verification/delivery is complete;
-- 🔍 means solution search/exploration, not success;
+- ✅ requires Root Cause Closure permission, not symptom-only repair;
+- 🔍 means solution/cause search, not confirmed closure;
 - 🧩 requires compatibility/preflight evidence;
 - 🐢 means slow but still live/legitimate, not automatically stalled;
 - 💭 means high-level operational analysis and never private chain-of-thought;
@@ -72,13 +80,40 @@ VISUAL SEMANTICS
 - 🔄 means synchronization/reconciliation is still in progress;
 - ⚡ remains for actual wake/recovery/health action.
 
-HIGH-PRESENCE NUMERIC PROGRESS - R10+
+HARD NUMERIC PROGRESS VISIBILITY - R11+
 Classic form remains:
 Progresso MotorLab: <N>%
-During a substantial operation, once a verified progress value exists, every meaningful user-facing operational status should normally include the current N%, even when unchanged.
-Repeated same percentage is correct when operational state changes without a newly verified milestone.
-Never invent a percentage merely for visibility. Progress remains evidence-based and monotonic.
-Activation-only or trivial administrative messages may omit percentage when no active quantified operation exists.
+For a substantial active/pending/new operation:
+- after the activation banner, establish/reconstruct and display an evidence-based N% before entering long opaque work;
+- every meaningful user-facing operational status MUST include the current N% when the surface permits;
+- before a long build/test/provider phase, show the current N%;
+- material provider/job phase changes repeat or advance the N% rather than remaining silent;
+- repeated same percentage is correct when state changes without a newly verified milestone;
+- do not invent progress merely for visibility;
+- a new chat/turn does not reset or suppress the percentage.
+
+ROOT CAUSE CLOSURE - R11+
+For every real defect/anomaly/stale state/unexpected trigger/failure:
+- contain/correct the immediate symptom safely;
+- determine why it occurred using evidence;
+- distinguish confirmed cause, leading hypothesis, external cause or unknown cause;
+- correct/contain the causal mechanism when possible;
+- inspect the smallest relevant recurrence surface;
+- add prevention/regression protection when justified;
+- do not use ✅ Problema risolto from a one-off retry, restart or manual alignment alone;
+- root-cause/prevention work remains part of the operation and can keep progress below 100%.
+
+PROJECT CONTINUITY / LIVE EVENT CLASSIFICATION - R11+
+- a stale ledger is reconciled from newer live evidence but unexpected missed write-through also opens Root Cause Closure;
+- MotorLab/control-plane-only commits/jobs do not silently create a new app LAB/MADRE/CANDIDATA or new app progress scale;
+- if control-plane-only changes unexpectedly trigger app build/release workflows, classify the trigger as a causal defect and correct trigger hygiene when safe.
+
+CONTROL-PLANE CI SUPPRESSION - R11+
+For commits that modify only MotorLab control-plane metadata such as `.motorlab/**` or `MOTORLAB_PROJECT_HOOK.txt`:
+- use a provider-supported CI skip marker/mechanism when safe and available (for GitHub push workflows, e.g. a supported skip-CI commit marker);
+- prefer repository path filters that exclude MotorLab-only metadata from application build/release workflows;
+- do not suppress CI when the same commit also changes application source/configuration that legitimately requires validation;
+- verify that prevention does not hide required tests for real app changes.
 
 CENTRAL SYNC
 Compare local release with MOTORLAB_RELEASE_MANIFEST_V1.txt at safe boundaries only. Never switch release mid active write/build/test/promotion. Preserve current verified local bundle as LAST_GOOD before adoption.
@@ -87,12 +122,12 @@ FALLBACK
 If central state is unavailable, use VERIFIED local bundle/LAST_GOOD and live project evidence conservatively.
 
 PLATFORM LIMIT
-A repository cannot wake a host with no execution cycle or identify a project when the host exposes no supported project/software-build signal.
+A repository cannot wake a host with no execution cycle or identify a project when the host exposes no supported project/software-build signal. Progress updates require a user-visible execution/control point.
 
 NO RUNTIME COUPLING
 This is development/orchestration metadata only; it must not intentionally alter app runtime, UI, package/signing identity or source lifecycle.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V1.9
-Revision 1.8: r9 permanent labeled visual status and final-only 💯.
-Revision 1.9: r10 adds seven labeled operational states and HIGH_PRESENCE_NUMERIC_PROGRESS.
+MOTORLAB-SATELLITE-BUNDLE-V2.1
+Revision 2.0: r11 adds ROOT_CAUSE_CLOSURE, LIVE_EVENT_CLASSIFICATION and HARD_PROGRESS_VISIBILITY.
+Revision 2.1: r11 adds CONTROL_PLANE_CI_SUPPRESSION to prevent metadata-only MotorLab sync from launching unrelated app pipelines.
