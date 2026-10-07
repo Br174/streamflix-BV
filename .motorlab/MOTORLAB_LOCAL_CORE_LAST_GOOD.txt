@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.07-r26
+RELEASE=2026.10.07-r28
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -88,6 +88,11 @@ UPDATE_FAMILY_LIFECYCLE=required
 PAIRED_SAFETY_LAB=required
 EXECUTION_CONTINUITY=required
 NO_TIMED_CONTINUATION=required
+RELEASE_FANOUT=required
+SESSION_RELEASE_PIN=required
+SESSION_RELEASE_PIN_FULL_SNAPSHOT=required
+SESSION_RELEASE_PIN_RESUME_REUSE=required
+SAFE_BOUNDARY_AUTO_ADOPTION=required
 
 LOCAL FALLBACK CONTRACT
 - First user-visible line: ⚙️ MotorLab attivo
@@ -272,8 +277,24 @@ R25_ORDINARY_FAST_PATH=preserved
 SINGLE_WRITER=preserved
 SINGLE_INTEGRATION_LANE=preserved
 
+R27 ZERO-IDLE DUAL-LANE INHERITANCE
+- Compatible independent READY work starts immediately; no artificial wait is added before useful sidework.
+- Predeclared productive sidework may be spawned immediately when expected gain exceeds overhead.
+- Same-task recovery remains separate: default hard trigger 10000 ms for eligible work, with earlier action only on reliable stall evidence.
+- For controlled analysis/wait tasks marked replacePrimaryOnHardHedge, the stale primary attempt is cancelled or invalidated at the hard trigger and late results are ignored.
+- Visible updates report only work that actually started or completed.
+- Host-limited execution is reported honestly; opaque native ChatGPT thinking cannot be directly controlled without a host surface.
+
+R28 AUTOMATIC RELEASE FANOUT + SESSION PIN INHERITANCE
+- MotorLab release fanout is mandatory for every registered project.
+- Current project sessions pin their complete MotorLab snapshot and cannot switch release underneath active work.
+- A repository may receive the newer satellite while an old session is running; that session keeps its pinned snapshot.
+- New sessions adopt the newest verified local release automatically.
+- Busy write/build/test/promotion refs are queued as PENDING_SAFE_BOUNDARY instead of being force-switched.
+- LAST_GOOD remains the immediately previous verified release.
+
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.21
+MOTORLAB-SATELLITE-BUNDLE-V2.23
 Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
 Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
 
@@ -302,3 +323,7 @@ Revision 2.18: r23 adds work-elimination-first, content-addressed reuse, increme
 Revision 2.20: r25 inherits Work-Elimination-first semantic workgroups and intrinsic dispatcher acceleration while preserving r24 latency branching and all project-native/safety boundaries.
 
 Revision 2.21: r26 inherits coordinated Triple Fresh Hedge, Adaptive Lane Pool and runtime feedback while preserving r24/r25 behavior and project-native authority.
+
+Revision 2.22: r27 inherits zero-idle immediate productive sidework plus separate same-task recovery and optional stale-primary replacement at the hard trigger.
+
+Revision 2.23: r28 inherits mandatory release fanout and full-snapshot per-session pinning with automatic safe-boundary adoption.
