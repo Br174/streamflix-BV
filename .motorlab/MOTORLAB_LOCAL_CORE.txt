@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.07-r30
+RELEASE=2026.10.08-r31
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -293,6 +293,16 @@ R27 ZERO-IDLE DUAL-LANE INHERITANCE
 - Visible updates report only work that actually started or completed.
 - Host-limited execution is reported honestly; opaque native ChatGPT thinking cannot be directly controlled without a host surface.
 
+R31 EVERY-TURN RE-ENTRY INHERITANCE
+REENTRY_GATE=required_every_project_user_prompt_and_resume
+REENTRY_PINNED_CAPSULE_REINJECTION=required
+REENTRY_MOTORLAB_GOVERNS_THIS_TURN=required
+REENTRY_LATEST_VERIFIED_LOCAL=adopt_at_safe_reentry
+REENTRY_UNSAFE_INFLIGHT=keep_pin_until_safe
+REENTRY_DOWNGRADE=forbidden
+REENTRY_SECOND_SCHEDULER=forbidden
+SUPPORTED_PROMPT_HOOK=motorlab_boot.py_before_pollicino
+
 R28 AUTOMATIC RELEASE FANOUT + SESSION PIN INHERITANCE
 - MotorLab release fanout is mandatory for every registered project.
 - Current project sessions pin their complete MotorLab snapshot and cannot switch release underneath active work.
@@ -302,7 +312,7 @@ R28 AUTOMATIC RELEASE FANOUT + SESSION PIN INHERITANCE
 - LAST_GOOD remains the immediately previous verified release.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.25
+MOTORLAB-SATELLITE-BUNDLE-V2.26
 Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
 Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
 
@@ -351,3 +361,6 @@ R30 CRITICAL BOOT CAPSULE INHERITANCE
 - Missing/oversized capsule is a bootstrap defect.
 
 Revision 2.25: r30 inherits mandatory non-truncatable critical capsule + compact boot context.
+
+
+Revision 2.26: r31 inherits mandatory every-turn/resume MotorLab re-entry and safe verified-local pin refresh.
