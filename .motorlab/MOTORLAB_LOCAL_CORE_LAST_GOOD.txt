@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.07-r24
+RELEASE=2026.10.07-r25
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -240,8 +240,22 @@ LATENCY_BRANCH_SINGLE_WRITER=preserved
 LATENCY_BRANCH_PROOF=required
 FICTIONAL_COMPLETION_COUNTDOWN=forbidden
 
+R25 SEMANTIC + INTRINSIC SPEED INHERITANCE
+WORK_ELIMINATION_BEFORE_WORKGROUPS=required
+SEMANTIC_WORKGROUPS=required
+SEMANTIC_WORKGROUP_GAIN_GATE=expected_gain_gt_overhead
+SEMANTIC_WORKGROUP_LABELS=required
+SEMANTIC_WORKGROUP_SECOND_SCHEDULER=forbidden
+INTRINSIC_ENGINE_ACCELERATION=required
+STATIC_GRAPH_ANALYSIS_REUSE=required
+GRAPH_CACHE_INVALIDATE_ON_TOPOLOGY_CHANGE=required
+EVENT_NO_LISTENER_FAST_PATH=required
+EVENT_LISTENER_AWAIT_SEMANTICS=preserved
+R24_LATENCY_BRANCHING=preserved
+SINGLE_INTEGRATION_LANE=preserved
+
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.19
+MOTORLAB-SATELLITE-BUNDLE-V2.20
 Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
 Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
 
@@ -266,3 +280,5 @@ Revision 2.16: r21 adds Four-Pillar TTTA-first adaptive Velocity markers, critic
 Revision 2.17: r22 adds operational Execution Fabric markers, Fast Decision Gate, ready-queue/batched dispatch, observed Proof of Parallelism, host-limited truthfulness and grouped runner status.
 
 Revision 2.18: r23 adds work-elimination-first, content-addressed reuse, incremental delta execution, dynamic DAG growth/pruning, progressive branching, event memory and deferred materialization markers.
+
+Revision 2.20: r25 inherits Work-Elimination-first semantic workgroups and intrinsic dispatcher acceleration while preserving r24 latency branching and all project-native/safety boundaries.
