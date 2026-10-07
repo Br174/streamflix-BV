@@ -1,8 +1,13 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.07-r29
+RELEASE=2026.10.07-r30
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
+DETAIL_MODULES_ON_DEMAND=required
+COMPACT_BOOT_CONTEXT=required
+CAPSULE_TRUNCATION=forbidden
+CAPSULE_FIRST_CONTEXT=required
+CRITICAL_BOOT_CAPSULE=required
 ALL_PROJECTS_MOTORLAB=required
 FUTURE_PROJECT_AUTO_ONBOARD=required
 VERSIONED_BOOT_BANNER=required
@@ -297,7 +302,7 @@ R28 AUTOMATIC RELEASE FANOUT + SESSION PIN INHERITANCE
 - LAST_GOOD remains the immediately previous verified release.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.24
+MOTORLAB-SATELLITE-BUNDLE-V2.25
 Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
 Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
 
@@ -338,3 +343,11 @@ R29 MANDATORY ALL-PROJECT VERSIONED BOOT INHERITANCE
 - Unknown release identity is a bootstrap defect; never fabricate the version.
 
 Revision 2.24: r29 inherits mandatory all-project activation, future-project auto-onboarding and versioned first-line startup proof.
+
+R30 CRITICAL BOOT CAPSULE INHERITANCE
+- Local `.motorlab/MOTORLAB_BOOT_CAPSULE.txt` is mandatory and is injected before hook/sync/core detail.
+- Capsule carries the critical compact contract for visible progress/icons, Velocity/zero-idle, Pollicino/Watchdog/Resume Recovery, APK/artifact-first, update-in-place, MADRE/LAB/CANDIDATA lifecycle, paired safety LAB, single-writer/root-cause, session pin/fanout and native-engine preservation.
+- Bootstrap must keep its emitted critical context under the host cap; long-form detail is loaded on demand.
+- Missing/oversized capsule is a bootstrap defect.
+
+Revision 2.25: r30 inherits mandatory non-truncatable critical capsule + compact boot context.
