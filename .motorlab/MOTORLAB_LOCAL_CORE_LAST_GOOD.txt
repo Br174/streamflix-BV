@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.06-r23
+RELEASE=2026.10.07-r24
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -230,8 +230,18 @@ POLLICINO CONTINUITY - R20+
 - The same adopted proof is persisted locally in `.motorlab/MOTORLAB_SYNC_STATE.txt` (and optionally the project hook); the Codex sidecar uses it before mutable Git HEAD. Metadata-only commits do not rotate it.
 - Alive-but-stalled evidence may precompute `READY_STALL_SUSPECTED`; resumed progress supersedes it.
 
+R24 LATENCY BRANCH INHERITANCE
+LATENCY_BRANCH_TRIGGER=required
+LATENCY_BRANCH_GAIN_GATE=expected_gain_gt_overhead
+LATENCY_BRANCH_PARENT_EARLY_FINISH=cancel_trigger
+LATENCY_BRANCH_IMMEDIATE_WAKE=required
+LATENCY_BRANCH_IRREVERSIBLE_SIDE_EFFECT_RACE=forbidden
+LATENCY_BRANCH_SINGLE_WRITER=preserved
+LATENCY_BRANCH_PROOF=required
+FICTIONAL_COMPLETION_COUNTDOWN=forbidden
+
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.18
+MOTORLAB-SATELLITE-BUNDLE-V2.19
 Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
 Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
 
