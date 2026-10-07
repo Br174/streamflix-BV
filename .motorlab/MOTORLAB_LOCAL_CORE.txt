@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.07-r25
+RELEASE=2026.10.07-r26
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -254,8 +254,26 @@ EVENT_LISTENER_AWAIT_SEMANTICS=preserved
 R24_LATENCY_BRANCHING=preserved
 SINGLE_INTEGRATION_LANE=preserved
 
+R26 ADAPTIVE RUNTIME INHERITANCE
+ADAPTIVE_RUNTIME_GOVERNOR=required
+TRIPLE_FRESH_HEDGE=required
+FRESH_HEDGE_DEFAULT_TRIGGER_MS=10000
+FRESH_HEDGE_EARLY_STALL_TRIGGER=required
+FRESH_HEDGE_MAX_ATTEMPTS_PER_WAVE=3
+FRESH_HEDGE_MAX_WAVES=2
+FRESH_HEDGE_FIRST_VALID_WINS=required
+FRESH_HEDGE_WRITE_DUPLICATION=forbidden
+FRESH_HEDGE_EXTERNAL_PROVIDER_AUTH=required
+ADAPTIVE_LANE_POOL=required
+ADAPTIVE_LANE_AIMD=required
+ADAPTIVE_LANE_PROVIDER_GUARD=required
+R24_LATENCY_BRANCHING=preserved
+R25_ORDINARY_FAST_PATH=preserved
+SINGLE_WRITER=preserved
+SINGLE_INTEGRATION_LANE=preserved
+
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.20
+MOTORLAB-SATELLITE-BUNDLE-V2.21
 Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
 Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
 
@@ -282,3 +300,5 @@ Revision 2.17: r22 adds operational Execution Fabric markers, Fast Decision Gate
 Revision 2.18: r23 adds work-elimination-first, content-addressed reuse, incremental delta execution, dynamic DAG growth/pruning, progressive branching, event memory and deferred materialization markers.
 
 Revision 2.20: r25 inherits Work-Elimination-first semantic workgroups and intrinsic dispatcher acceleration while preserving r24 latency branching and all project-native/safety boundaries.
+
+Revision 2.21: r26 inherits coordinated Triple Fresh Hedge, Adaptive Lane Pool and runtime feedback while preserving r24/r25 behavior and project-native authority.
