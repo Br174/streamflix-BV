@@ -35,6 +35,13 @@ function task(t) {
     latencySpawn:Array.isArray(t.latencySpawn)?t.latencySpawn:[],
     workgroup:t.workgroup ? String(t.workgroup) : '',
     workgroupLabel:t.workgroupLabel ? String(t.workgroupLabel) : '',
+    laneKey:t.laneKey ? String(t.laneKey) : kind,
+    adaptiveLane:Boolean(t.adaptiveLane ?? kind==='external'),
+    hedgeSafe:Boolean(t.hedgeSafe),
+    hedgeExternalAllowed:Boolean(t.hedgeExternalAllowed),
+    hedgeAfterMs:Math.max(0,Number(t.hedgeAfterMs)||0),
+    hedgeWidth:Math.max(1,Math.min(3,Number(t.hedgeWidth)||3)),
+    hedgeMaxWaves:Math.max(1,Math.min(2,Number(t.hedgeMaxWaves)||2)),
   };
 }
 
@@ -136,25 +143,103 @@ export async function executeSemanticWorkgroups(input=[],worker,options={}) {
   return out;
 }
 
-export async function executeGraph(input=[],worker,{maxConcurrency=DEFAULT_MAX,now=()=>Date.now(),onEvent,cacheLookup,cacheStore}={}){
+
+export function createAdaptiveRuntimeGovernor(config={}) {
+  const minLanes=Math.max(1,Number(config.minLanes)||1);
+  const maxLanes=Math.max(minLanes,Number(config.maxLanes)||DEFAULT_MAX);
+  const initialLanes=Math.max(minLanes,Math.min(maxLanes,Number(config.initialLanes)||Math.min(3,maxLanes)));
+  const successesToIncrease=Math.max(1,Number(config.successesToIncrease)||4);
+  const hedgeTriggerMs=Math.max(1,Number(config.hedgeTriggerMs)||10000);
+  const ewmaAlpha=Math.min(.95,Math.max(.05,Number(config.ewmaAlpha)||.25));
+  const restored=config.state?.lanes||{};
+  const lanes=new Map();
+  const lane=key=>{
+    const k=String(key||'default');
+    if(!lanes.has(k)){
+      const seed=restored[k]||{};
+      lanes.set(k,{
+        key:k,
+        limit:Math.max(minLanes,Math.min(maxLanes,Number(seed.limit)||initialLanes)),
+        samples:Number(seed.samples)||0,
+        successes:Number(seed.successes)||0,
+        failures:Number(seed.failures)||0,
+        throttles:Number(seed.throttles)||0,
+        saturations:Number(seed.saturations)||0,
+        successStreak:Number(seed.successStreak)||0,
+        ewmaMs:Number(seed.ewmaMs)||0,
+        lastMs:Number(seed.lastMs)||0,
+        adjustments:Number(seed.adjustments)||0
+      });
+    }
+    return lanes.get(k);
+  };
+  const isThrottle=value=>{
+    if(value?.runtime?.throttled===true||value?.throttled===true)return true;
+    const s=String(value?.message||value?.error||value||'').toLowerCase();
+    return /(^|\D)429(\D|$)|rate.?limit|secondary.?rate|throttl|too many requests/.test(s);
+  };
+  const isSaturated=value=>Boolean(value?.runtime?.saturated===true||value?.saturated===true);
+  const observe=({laneKey='default',durationMs=0,ok=true,value,error}={})=>{
+    const s=lane(laneKey),ms=Math.max(0,Number(durationMs)||0),throttled=isThrottle(value)||isThrottle(error),saturated=isSaturated(value);
+    const before=s.limit;
+    s.samples++;s.lastMs=ms;
+    if(ms)s.ewmaMs=s.ewmaMs?s.ewmaMs*(1-ewmaAlpha)+ms*ewmaAlpha:ms;
+    if(throttled){
+      s.throttles++;s.successStreak=0;s.limit=Math.max(minLanes,Math.floor(s.limit/2));
+    }else if(saturated){
+      s.saturations++;s.successStreak=0;s.limit=Math.max(minLanes,s.limit-1);
+    }else if(ok){
+      s.successes++;s.successStreak++;
+      if(s.successStreak>=successesToIncrease&&s.limit<maxLanes){s.limit++;s.successStreak=0;}
+    }else{
+      s.failures++;s.successStreak=0;
+    }
+    if(s.limit!==before)s.adjustments++;
+    return {before,after:s.limit,throttled,saturated,state:{...s}};
+  };
+  return {
+    laneLimit:key=>lane(key).limit,
+    hedgeTriggerMs:task=>Math.max(1,Number(task?.hedgeAfterMs)||hedgeTriggerMs),
+    hedgeWidth:task=>Math.max(1,Math.min(3,Number(task?.hedgeWidth)||3,lane(task?.laneKey).limit)),
+    observe,
+    isThrottle,
+    snapshot:()=>({minLanes,maxLanes,initialLanes,successesToIncrease,hedgeTriggerMs,lanes:Object.fromEntries([...lanes].map(([k,v])=>[k,{...v}]))})
+  };
+}
+
+export async function executeGraph(input=[],worker,{maxConcurrency=DEFAULT_MAX,now=()=>Date.now(),onEvent,cacheLookup,cacheStore,adaptiveGovernor,adaptiveGovernorConfig={},adaptiveStateLoad,adaptiveStateStore,resultValidator}={}) {
   if(typeof worker!=='function')throw new Error('worker callback required');
-  const initial=validateGraph(input), max=Math.max(1,Number(maxConcurrency)||1);
-  const tasks=new Map(initial.map(t=>[t.id,t])), pending=new Set(tasks.keys()), done=new Set(), pruned=new Set(), running=new Map(), results=new Map(), records=[], eventHistory=[], cacheChecked=new Set();
+  const initial=validateGraph(input),max=Math.max(1,Number(maxConcurrency)||1);
+  let adaptiveStateLoaded=false,adaptiveStateStored=false,restoredAdaptiveState=null;
+  if(!adaptiveGovernor&&typeof adaptiveStateLoad==='function'){
+    try{restoredAdaptiveState=await adaptiveStateLoad();adaptiveStateLoaded=Boolean(restoredAdaptiveState);}catch{}
+  }
+  const governor=adaptiveGovernor||createAdaptiveRuntimeGovernor({minLanes:1,maxLanes:max,initialLanes:Math.min(3,max),...adaptiveGovernorConfig,state:restoredAdaptiveState||adaptiveGovernorConfig.state});
+  const tasks=new Map(initial.map(t=>[t.id,t])),pending=new Set(tasks.keys()),done=new Set(),pruned=new Set(),running=new Map(),results=new Map(),records=[],eventHistory=[],cacheChecked=new Set();
   let peak=0,intNow=0,intPeak=0,correctionRelays=0,dynamicTasks=0,cacheHits=0,cacheAvoidedEstimatedMs=0,latencyBranches=0,latencyBranchTasks=0,latencyExpectedGainMs=0,latencyBranchFailures=0;
-  let graphVersion=0,cachedGraphVersion=-1,cachedGraph=null,cachedScores=null,schedulerGraphRecomputes=0,eventFastPathCount=0;
+  let freshHedges=0,hedgeWaves=0,hedgeWins=0,hedgePrimaryWins=0,hedgeAbortRequests=0,hedgeSuppressedUnsafe=0,hedgeExhausted=0,materialProgressSignals=0,earlyStallSignals=0,laneAdjustments=0,laneThrottleSignals=0,laneSaturationSignals=0;
+  let graphVersion=0,cachedGraphVersion=-1,cachedGraph=null,cachedScores=null,schedulerGraphRecomputes=0,eventFastPathCount=0,wakeGeneration=0;
+  const laneInflight=new Map();
+  const laneCount=key=>laneInflight.get(key)||0;
+  const holdLane=(t,a)=>{if(!t.adaptiveLane||a.budgetHeld)return;a.budgetHeld=true;laneInflight.set(t.laneKey,laneCount(t.laneKey)+1);};
+  const releaseLane=(t,a)=>{if(!a?.budgetHeld)return;a.budgetHeld=false;laneInflight.set(t.laneKey,Math.max(0,laneCount(t.laneKey)-1));};
+  const wakeWaiters=new Set();
+  const wakeScheduler=()=>{wakeGeneration++;for(const token of [...wakeWaiters]){wakeWaiters.delete(token);token.resolve();}};
+  const makeWakeWaiter=()=>{let resolve;const promise=new Promise(r=>{resolve=r;});const token={resolve};wakeWaiters.add(token);return{promise,cancel:()=>wakeWaiters.delete(token)};};
   const emit=event=>{const entry={sequence:eventHistory.length+1,at:now(),...event};eventHistory.push(entry);if(!onEvent){eventFastPathCount++;return null;}return Promise.resolve(onEvent(entry));};
   const emitWait=async event=>{const ack=emit(event);if(ack)await ack;};
   const schedulerView=()=>{if(cachedGraphVersion!==graphVersion){cachedGraph=validateGraph([...tasks.values()]);cachedScores=tailScores(cachedGraph);cachedGraphVersion=graphVersion;schedulerGraphRecomputes++;}return{graph:cachedGraph,scores:cachedScores};};
-  const canStart=t=>running.size<max && ![...running.values()].some(x=>conflicts(t,x.task));
+  const canStart=t=>running.size<max&&(!t.adaptiveLane||laneCount(t.laneKey)<Math.min(max,governor.laneLimit(t.laneKey)))&&![...running.values()].some(x=>conflicts(t,x.task));
   const latencyUseful=t=>t.latencyBranchAfterMs>0&&t.latencySpawn.length>0&&t.latencyBranchExpectedGainMs>t.latencyBranchOverheadMs;
+  const hedgeEligible=t=>t.hedgeSafe&&(t.kind==='read'||(t.kind==='external'&&t.hedgeExternalAllowed));
 
   const addTasks=async(parent,list=[],reason='BRANCH')=>{
     for(const raw of list){
-      const child=task({...raw,workgroup:raw.workgroup??parent.workgroup,workgroupLabel:raw.workgroupLabel??parent.workgroupLabel,deps:[...new Set([...(raw.deps||[]),...(raw.detached?[]:[parent.id])])]});
+      const child=task({...raw,workgroup:raw.workgroup??parent.workgroup,workgroupLabel:raw.workgroupLabel??parent.workgroupLabel,laneKey:raw.laneKey??parent.laneKey,deps:[...new Set([...(raw.deps||[]),...(raw.detached?[]:[parent.id])])]});
       if(tasks.has(child.id))throw new Error('duplicate dynamic task '+child.id);
       for(const dep of child.deps)if(!tasks.has(dep))throw new Error(child.id+' missing dep '+dep);
-      tasks.set(child.id,child);pending.add(child.id);dynamicTasks++;graphVersion++;
-      await emitWait({type:'TASK_SPAWNED',taskId:child.id,parentTaskId:parent.id,reason});
+      tasks.set(child.id,child);pending.add(child.id);dynamicTasks++;graphVersion++;wakeScheduler();
+      await emitWait({type:'TASK_SPAWNED',taskId:child.id,parentTaskId:parent.id,reason,laneKey:child.laneKey});
     }
   };
   const pruneTasks=async(parent,ids=[])=>{
@@ -176,7 +261,7 @@ export async function executeGraph(input=[],worker,{maxConcurrency=DEFAULT_MAX,n
     for(const {t,value} of lookups){
       if(value==null||value===false){await emitWait({type:'CACHE_MISS',taskId:t.id,cacheKey:t.cacheKey});continue;}
       hit=true;pending.delete(t.id);done.add(t.id);results.set(t.id,value?.value??value);cacheHits++;cacheAvoidedEstimatedMs+=t.estimatedMs;
-      records.push({id:t.id,kind:t.kind,workgroup:t.workgroup,workgroupLabel:t.workgroupLabel,startedAt:now(),finishedAt:now(),status:'CACHE_HIT',cacheKey:t.cacheKey});
+      records.push({id:t.id,kind:t.kind,workgroup:t.workgroup,workgroupLabel:t.workgroupLabel,laneKey:t.laneKey,startedAt:now(),finishedAt:now(),status:'CACHE_HIT',cacheKey:t.cacheKey});
       await emitWait({type:'CACHE_HIT',taskId:t.id,cacheKey:t.cacheKey,avoidedEstimatedMs:t.estimatedMs});
       if(value?.spawn)await addTasks(t,value.spawn,'CACHE_RESTORED_BRANCH');
       if(value?.prune)await pruneTasks(t,value.prune);
@@ -185,42 +270,162 @@ export async function executeGraph(input=[],worker,{maxConcurrency=DEFAULT_MAX,n
   };
 
   const launch=async t=>{
-    pending.delete(t.id);const rec={id:t.id,kind:t.kind,workgroup:t.workgroup,workgroupLabel:t.workgroupLabel,startedAt:now(),finishedAt:null,status:'RUNNING'};records.push(rec);
-    if(t.kind==='integration'){intNow++;intPeak=Math.max(intPeak,intNow);}peak=Math.max(peak,running.size+1);const startAck=emit({type:'RUNNER_STARTED',taskId:t.id,workgroupId:t.workgroup||null,workgroupLabel:t.workgroupLabel||null,running:running.size+1});if(startAck)await startAck;
-    let latencyTimer=null,latencyWakeResolve=null;
-    const promise=Promise.resolve().then(()=>worker(t,{completed:new Set(done),pruned:new Set(pruned),runningCount:running.size+1,maxConcurrency:max,makeContentKey})).then(async value=>{
-      if(latencyTimer)clearTimeout(latencyTimer);
-      rec.finishedAt=now();rec.status='COMPLETED';if(t.kind==='integration')intNow--;results.set(t.id,value);done.add(t.id);running.delete(t.id);
+    pending.delete(t.id);
+    const rec={id:t.id,kind:t.kind,workgroup:t.workgroup,workgroupLabel:t.workgroupLabel,laneKey:t.laneKey,startedAt:now(),finishedAt:null,status:'RUNNING'};
+    records.push(rec);
+    if(t.kind==='integration'){intNow++;intPeak=Math.max(intPeak,intNow);}
+    peak=Math.max(peak,running.size+1);
+    const startAck=emit({type:'RUNNER_STARTED',taskId:t.id,workgroupId:t.workgroup||null,workgroupLabel:t.workgroupLabel||null,laneKey:t.laneKey,laneLimit:governor.laneLimit(t.laneKey),running:running.size+1});
+    if(startAck)await startAck;
+
+    const eligible=hedgeEligible(t);
+    if(t.hedgeSafe&&!eligible)hedgeSuppressedUnsafe++;
+
+    if(!eligible&&!latencyUseful(t)&&!t.adaptiveLane&&typeof resultValidator!=='function'){
+      const promise=Promise.resolve().then(()=>worker(t,{
+        completed:new Set(done),pruned:new Set(pruned),runningCount:running.size+1,maxConcurrency:max,makeContentKey,
+        attempt:1,wave:1,laneKey:t.laneKey,laneLimit:max,
+        progress:detail=>{materialProgressSignals++;const ack=emit({type:'RUNNER_PROGRESS',taskId:t.id,attempt:1,wave:1,laneKey:t.laneKey,detail:detail??null});if(ack)ack.catch(()=>{});},
+        stall:reason=>{earlyStallSignals++;const ack=emit({type:'RUNNER_STALL_SIGNAL',taskId:t.id,attempt:1,wave:1,laneKey:t.laneKey,reason:String(reason||'STALL')});if(ack)ack.catch(()=>{});}
+      })).then(async value=>{
+        rec.finishedAt=now();rec.status='COMPLETED';rec.winnerAttempt=1;rec.attempts=1;if(t.kind==='integration')intNow--;
+        results.set(t.id,value);done.add(t.id);running.delete(t.id);
+        if(value?.spawn)await addTasks(t,value.spawn,'DISCOVERY_BRANCH');
+        if(value?.prune)await pruneTasks(t,value.prune);
+        if(value?.corrections)await addCorrections(t,value.corrections);
+        if(t.cacheable&&t.cacheKey&&typeof cacheStore==='function'&&value?.cacheable!==false){await cacheStore(t.cacheKey,value,t);await emitWait({type:'CACHE_STORED',taskId:t.id,cacheKey:t.cacheKey});}
+        await emitWait({type:'RUNNER_COMPLETED',taskId:t.id,workgroupId:t.workgroup||null,workgroupLabel:t.workgroupLabel||null,laneKey:t.laneKey,winnerAttempt:1,attempts:1,running:running.size});
+        return value;
+      }).catch(async e=>{
+        rec.finishedAt=now();rec.status='FAILED';rec.error=String(e?.message||e);rec.attempts=1;if(t.kind==='integration')intNow--;
+        running.delete(t.id);await emitWait({type:'RUNNER_FAILED',taskId:t.id,workgroupId:t.workgroup||null,workgroupLabel:t.workgroupLabel||null,laneKey:t.laneKey,attempts:1,error:rec.error});throw e;
+      });
+      running.set(t.id,{task:t,promise,latencyWake:null});
+      return;
+    }
+
+    const hardMs=governor.hedgeTriggerMs(t),maxWaves=t.hedgeMaxWaves,width=()=>t.adaptiveLane?Math.max(1,Math.min(governor.hedgeWidth(t),1+Math.max(0,governor.laneLimit(t.laneKey)-laneCount(t.laneKey)))):Math.max(1,Math.min(3,t.hedgeWidth));
+    let recoveryTimer=null,latencyWakeResolve=null,latencyBranchTriggered=false,settled=false,currentWave=1,waveExpanded=false,attemptSeq=0,winnerAttempt=0;
+    const controllers=new Map(),attempts=new Map(),stalled=new Set(),failures=[];
+    let resolveTask,rejectTask;
+    const completion=new Promise((resolve,reject)=>{resolveTask=resolve;rejectTask=reject;});
+
+    const scheduleTimer=ms=>{
+      if(recoveryTimer)clearTimeout(recoveryTimer);
+      recoveryTimer=setTimeout(()=>{void onRecoveryDeadline();},Math.max(1,ms));
+    };
+    const abortAttempts=reason=>{
+      for(const [id,controller] of controllers)if(!controller.signal.aborted){controller.abort(reason);hedgeAbortRequests++;releaseLane(t,attempts.get(id));}
+    };
+    const taskAttemptsForWave=wave=>[...attempts.values()].filter(a=>a.wave===wave);
+    const activeForWave=wave=>taskAttemptsForWave(wave).filter(a=>a.active);
+    const validResult=async(value,attempt)=>{
+      if(typeof resultValidator==='function')return Boolean(await resultValidator(value,t,{attempt:attempt.id,wave:attempt.wave}));
+      return value?.valid!==false&&value?.stalled!==true;
+    };
+    const observeLane=async({ok,value,error,durationMs})=>{
+      if(!t.adaptiveLane)return;
+      const obs=governor.observe({laneKey:t.laneKey,ok,value,error,durationMs});
+      if(obs.before!==obs.after){laneAdjustments++;await emitWait({type:'LANE_LIMIT_ADJUSTED',taskId:t.id,laneKey:t.laneKey,before:obs.before,after:obs.after,throttled:obs.throttled,saturated:obs.saturated});}
+      if(obs.throttled)laneThrottleSignals++;
+      if(obs.saturated)laneSaturationSignals++;
+    };
+    const finishFailureIfExhausted=()=>{
+      if(settled)return;
+      if(activeForWave(currentWave).length)return;
+      if(currentWave<maxWaves){startNextWave('WAVE_FAILED');return;}
+      settled=true;hedgeExhausted++;abortAttempts('HEDGE_EXHAUSTED');rejectTask(failures.at(-1)||new Error('fresh hedge waves exhausted'));
+    };
+    const startAttempt=wave=>{
+      const id=++attemptSeq,controller=new AbortController(),startedAt=now(),a={id,wave,active:true,startedAt,budgetHeld:false};
+      attempts.set(id,a);controllers.set(id,controller);holdLane(t,a);
+      const ctx={completed:new Set(done),pruned:new Set(pruned),runningCount:running.size+1,maxConcurrency:max,makeContentKey,attempt:id,wave,signal:controller.signal,laneKey:t.laneKey,laneLimit:governor.laneLimit(t.laneKey),progress:detail=>{if(settled)return;materialProgressSignals++;const ack=emit({type:'RUNNER_PROGRESS',taskId:t.id,attempt:id,wave,laneKey:t.laneKey,detail:detail??null});if(ack)ack.catch(()=>{});},stall:reason=>{if(settled)return;earlyStallSignals++;stalled.add(id);const ack=emit({type:'RUNNER_STALL_SIGNAL',taskId:t.id,attempt:id,wave,laneKey:t.laneKey,reason:String(reason||'STALL')});if(ack)ack.catch(()=>{});if(wave===1&&!waveExpanded)expandWave('EARLY_STALL');else if(activeForWave(wave).length&&activeForWave(wave).every(x=>stalled.has(x.id)))startNextWave('ALL_ATTEMPTS_STALLED');}};
+      Promise.resolve().then(()=>worker(t,ctx)).then(async value=>{
+        a.active=false;releaseLane(t,a);
+        await observeLane({ok:true,value,durationMs:Math.max(0,now()-startedAt)});
+        if(settled)return;
+        if(!(await validResult(value,a))){
+          failures.push(new Error(value?.stalled?'stalled result':'invalid result'));
+          stalled.add(id);
+          if(wave===1&&!waveExpanded)expandWave('INVALID_OR_STALLED_RESULT');
+          finishFailureIfExhausted();return;
+        }
+        settled=true;winnerAttempt=id;if(id===1)hedgePrimaryWins++;else hedgeWins++;
+        abortAttempts('HEDGE_WINNER');
+        resolveTask(value);
+      }).catch(async error=>{
+        a.active=false;releaseLane(t,a);
+        await observeLane({ok:false,error,durationMs:Math.max(0,now()-startedAt)});
+        if(settled)return;
+        failures.push(error);
+        if(wave===1&&!waveExpanded)expandWave('PRIMARY_FAILED');
+        finishFailureIfExhausted();
+      });
+      return id;
+    };
+    const expandWave=reason=>{
+      if(settled||!eligible||waveExpanded)return false;
+      waveExpanded=true;freshHedges++;hedgeWaves++;
+      const target=width();
+      while(taskAttemptsForWave(1).length<target)startAttempt(1);
+      const ack=emit({type:'FRESH_HEDGE_WAVE_STARTED',taskId:t.id,wave:1,width:target,reason,triggerMs:hardMs,laneKey:t.laneKey});
+      if(ack)ack.catch(()=>{});
+      scheduleTimer(hardMs);
+      return true;
+    };
+    const startNextWave=reason=>{
+      if(settled||!eligible||currentWave>=maxWaves)return false;
+      currentWave++;waveExpanded=true;freshHedges++;hedgeWaves++;
+      for(const [id,controller] of controllers){const a=attempts.get(id);if(a?.wave<currentWave&&!controller.signal.aborted){controller.abort('NEXT_HEDGE_WAVE');hedgeAbortRequests++;releaseLane(t,a);}}
+      const target=width();
+      for(let i=0;i<target;i++)startAttempt(currentWave);
+      const ack=emit({type:'FRESH_HEDGE_WAVE_STARTED',taskId:t.id,wave:currentWave,width:target,reason,triggerMs:hardMs,laneKey:t.laneKey});
+      if(ack)ack.catch(()=>{});
+      scheduleTimer(hardMs);
+      return true;
+    };
+    const onRecoveryDeadline=async()=>{
+      if(settled)return;
+      if(eligible){
+        if(currentWave===1&&!waveExpanded){expandWave('HARD_10S_TRIGGER');return;}
+        if(currentWave<maxWaves){startNextWave('WAVE_TIMEOUT');return;}
+        settled=true;hedgeExhausted++;abortAttempts('HEDGE_TIMEOUT_EXHAUSTED');rejectTask(new Error('fresh hedge hard timeout exhausted'));return;
+      }
+      if(latencyUseful(t)&&!latencyBranchTriggered){
+        latencyBranchTriggered=true;
+        try{
+          const spawned=t.latencySpawn.map(raw=>({...raw,detached:true}));
+          await addTasks(t,spawned,'LATENCY_BRANCH');latencyBranches++;latencyBranchTasks+=spawned.length;latencyExpectedGainMs+=t.latencyBranchExpectedGainMs;
+          await emitWait({type:'LATENCY_BRANCH_TRIGGERED',taskId:t.id,afterMs:t.latencyBranchAfterMs,spawnedTasks:spawned.map(x=>String(x.id)),expectedGainMs:t.latencyBranchExpectedGainMs,overheadMs:t.latencyBranchOverheadMs});
+        }catch(e){latencyBranchFailures++;await emitWait({type:'LATENCY_BRANCH_FAILED',taskId:t.id,error:String(e?.message||e)});}
+      }
+    };
+
+    startAttempt(1);
+    if(eligible)scheduleTimer(hardMs);
+    else if(latencyUseful(t))scheduleTimer(t.latencyBranchAfterMs);
+
+    const promise=completion.then(async value=>{
+      if(recoveryTimer)clearTimeout(recoveryTimer);
+      rec.finishedAt=now();rec.status='COMPLETED';rec.winnerAttempt=winnerAttempt;rec.attempts=attemptSeq;if(t.kind==='integration')intNow--;
+      results.set(t.id,value);done.add(t.id);running.delete(t.id);
       if(value?.spawn)await addTasks(t,value.spawn,'DISCOVERY_BRANCH');
       if(value?.prune)await pruneTasks(t,value.prune);
       if(value?.corrections)await addCorrections(t,value.corrections);
       if(t.cacheable&&t.cacheKey&&typeof cacheStore==='function'&&value?.cacheable!==false){await cacheStore(t.cacheKey,value,t);await emitWait({type:'CACHE_STORED',taskId:t.id,cacheKey:t.cacheKey});}
-      await emitWait({type:'RUNNER_COMPLETED',taskId:t.id,workgroupId:t.workgroup||null,workgroupLabel:t.workgroupLabel||null,running:running.size});return value;
+      await emitWait({type:'RUNNER_COMPLETED',taskId:t.id,workgroupId:t.workgroup||null,workgroupLabel:t.workgroupLabel||null,laneKey:t.laneKey,winnerAttempt,attempts:attemptSeq,running:running.size});
+      return value;
     }).catch(async e=>{
-      if(latencyTimer)clearTimeout(latencyTimer);
-      rec.finishedAt=now();rec.status='FAILED';rec.error=String(e?.message||e);if(t.kind==='integration')intNow--;running.delete(t.id);await emitWait({type:'RUNNER_FAILED',taskId:t.id,workgroupId:t.workgroup||null,workgroupLabel:t.workgroupLabel||null,error:rec.error});throw e;
+      if(recoveryTimer)clearTimeout(recoveryTimer);
+      rec.finishedAt=now();rec.status='FAILED';rec.error=String(e?.message||e);rec.attempts=attemptSeq;if(t.kind==='integration')intNow--;
+      running.delete(t.id);await emitWait({type:'RUNNER_FAILED',taskId:t.id,workgroupId:t.workgroup||null,workgroupLabel:t.workgroupLabel||null,laneKey:t.laneKey,attempts:attemptSeq,error:rec.error});throw e;
     });
     const entry={task:t,promise,latencyWake:null};running.set(t.id,entry);
-    if(latencyUseful(t)){
-      entry.latencyWake=new Promise(resolve=>{latencyWakeResolve=resolve;});
-      latencyTimer=setTimeout(async()=>{
-        const live=running.get(t.id);
-        if(!live){latencyWakeResolve?.();return;}
-        live.latencyWake=null;
-        try{
-          const spawned=t.latencySpawn.map(raw=>({...raw,detached:true}));
-          await addTasks(t,spawned,'LATENCY_BRANCH');
-          latencyBranches++;latencyBranchTasks+=spawned.length;latencyExpectedGainMs+=t.latencyBranchExpectedGainMs;
-          await emitWait({type:'LATENCY_BRANCH_TRIGGERED',taskId:t.id,afterMs:t.latencyBranchAfterMs,spawnedTasks:spawned.map(x=>String(x.id)),expectedGainMs:t.latencyBranchExpectedGainMs,overheadMs:t.latencyBranchOverheadMs});
-        }catch(e){
-          latencyBranchFailures++;
-          await emitWait({type:'LATENCY_BRANCH_FAILED',taskId:t.id,error:String(e?.message||e)});
-        }finally{latencyWakeResolve?.();}
-      },t.latencyBranchAfterMs);
-    }
   };
-  const executionStartAck=emit({type:'EXECUTION_STARTED',initialTasks:initial.length,maxConcurrency:max});if(executionStartAck)await executionStartAck;
+
+  const executionStartAck=emit({type:'EXECUTION_STARTED',initialTasks:initial.length,maxConcurrency:max,adaptive:true});if(executionStartAck)await executionStartAck;
   while(pending.size||running.size){
+    const cycleWakeGeneration=wakeGeneration;
     let launched=false;
     let {graph,scores}=schedulerView();
     let ready=[...pending].map(id=>tasks.get(id)).filter(t=>t&&!pruned.has(t.id)&&t.deps.every(d=>done.has(d)||pruned.has(d))).sort((a,b)=>(scores.get(b.id)||b.estimatedMs)-(scores.get(a.id)||a.estimatedMs));
@@ -229,7 +434,14 @@ export async function executeGraph(input=[],worker,{maxConcurrency=DEFAULT_MAX,n
       ready=[...pending].map(id=>tasks.get(id)).filter(t=>t&&!pruned.has(t.id)&&t.deps.every(d=>done.has(d)||pruned.has(d))).sort((a,b)=>(scores.get(b.id)||b.estimatedMs)-(scores.get(a.id)||a.estimatedMs));
     }
     for(const t of ready){if(!canStart(t))continue;await launch(t);launched=true;if(running.size>=max)break;}
-    if(running.size){if(!launched||running.size>=max||!ready.length){const waits=[...running.values()].flatMap(x=>x.latencyWake?[x.promise,x.latencyWake]:[x.promise]);await Promise.race(waits);}continue;}
+    if(running.size){
+      if(wakeGeneration!==cycleWakeGeneration)continue;
+      if(!launched||running.size>=max||!ready.length){
+        const waiter=makeWakeWaiter();
+        try{await Promise.race([...running.values()].map(x=>x.promise).concat(waiter.promise));}finally{waiter.cancel();}
+      }
+      continue;
+    }
     if(pending.size)throw new Error('execution deadlock');
   }
 
@@ -237,8 +449,10 @@ export async function executeGraph(input=[],worker,{maxConcurrency=DEFAULT_MAX,n
   for(let i=0;i<workRecords.length;i++)for(let j=i+1;j<workRecords.length;j++)if(workRecords[i].startedAt<workRecords[j].finishedAt&&workRecords[j].startedAt<workRecords[i].finishedAt)overlaps.push([workRecords[i].id,workRecords[j].id]);
   const finalGraph=schedulerView().graph,effectiveRunnerCount=workRecords.length;
   const executionMode=effectiveRunnerCount<=1&&cacheHits===0?'DIRECT_FAST':max===1&&effectiveRunnerCount>1?'SERIAL_HOST_LIMITED':peak>1?'PARALLEL_OBSERVED':'SERIAL_REQUIRED';
-  const executionDoneAck=emit({type:'EXECUTION_COMPLETED',cacheHits,dynamicTasks,prunedTasks:pruned.size,latencyBranches});if(executionDoneAck)await executionDoneAck;
-  return {results:Object.fromEntries(results),eventHistory,proof:{executionMode,runnerCount:effectiveRunnerCount,observedPeakConcurrency:peak,observedPeakIntegrationConcurrency:intPeak,singleIntegrationLaneVerified:intPeak<=1,overlapPairs:overlaps,criticalPath:criticalPath(finalGraph),correctionRelays,dynamicTasks,prunedTasks:[...pruned],cacheHits,cacheAvoidedEstimatedMs,latencyBranches,latencyBranchTasks,latencyExpectedGainMs,latencyBranchFailures,schedulerGraphRecomputes,eventFastPathCount,eventsRecorded:eventHistory.length,records}};
+  const governorSnapshot=governor.snapshot();
+  if(typeof adaptiveStateStore==='function'){try{await adaptiveStateStore(governorSnapshot);adaptiveStateStored=true;}catch{}}
+  const executionDoneAck=emit({type:'EXECUTION_COMPLETED',cacheHits,dynamicTasks,prunedTasks:pruned.size,latencyBranches,freshHedges,laneAdjustments,adaptiveStateLoaded,adaptiveStateStored});if(executionDoneAck)await executionDoneAck;
+  return {results:Object.fromEntries(results),eventHistory,proof:{executionMode,runnerCount:effectiveRunnerCount,observedPeakConcurrency:peak,observedPeakIntegrationConcurrency:intPeak,singleIntegrationLaneVerified:intPeak<=1,overlapPairs:overlaps,criticalPath:criticalPath(finalGraph),correctionRelays,dynamicTasks,prunedTasks:[...pruned],cacheHits,cacheAvoidedEstimatedMs,latencyBranches,latencyBranchTasks,latencyExpectedGainMs,latencyBranchFailures,freshHedges,hedgeWaves,hedgeWins,hedgePrimaryWins,hedgeAbortRequests,hedgeSuppressedUnsafe,hedgeExhausted,materialProgressSignals,earlyStallSignals,laneAdjustments,laneThrottleSignals,laneSaturationSignals,adaptiveStateLoaded,adaptiveStateStored,adaptiveGovernor:governorSnapshot,schedulerGraphRecomputes,eventFastPathCount,eventsRecorded:eventHistory.length,records}};
 }
 
 export function formatProof(p={}){
@@ -247,8 +461,9 @@ export function formatProof(p={}){
   const dynamic=p.dynamicTasks?` — rami dinamici ${p.dynamicTasks}, potati ${(p.prunedTasks||[]).length}`:'';
   const latency=p.latencyBranches?` — latency branch ${p.latencyBranches}, task ${p.latencyBranchTasks||0}, guadagno atteso ~${p.latencyExpectedGainMs||0}ms`:'';
   const wg=p.semanticWorkgroups?.mode==='SEMANTIC_PARALLEL'?` — workgroup semantici ${p.semanticWorkgroups.activeGroups?.length||0}, lavoro eliminato ${(p.semanticWorkgroups.eliminatedGroups||[]).length}, guadagno stimato ~${p.semanticWorkgroups.estimatedGainMs||0}ms`:p.semanticWorkgroups?.eliminatedGroups?.length?` — lavoro eliminato ${p.semanticWorkgroups.eliminatedGroups.length}`:'';
-  if(p.executionMode==='PARALLEL_OBSERVED')return `Modalita: PARALLELA — picco ${p.observedPeakConcurrency||0} corridori reali — critical path: ${path}${reuse}${dynamic}${latency}${wg}`;
-  if(p.executionMode==='SERIAL_HOST_LIMITED')return `Modalita: SERIALE LIMITATA DALL'HOST — 1 corridore — critical path: ${path}${reuse}${dynamic}${latency}${wg}`;
-  if(p.executionMode==='DIRECT_FAST')return `Modalita: DIRECT FAST — nessun fan-out necessario — critical path: ${path}${reuse}${dynamic}${latency}${wg}`;
-  return `Modalita: SERIALE NECESSARIA — dipendenze/conflitti impediscono fan-out utile — critical path: ${path}${reuse}${dynamic}${latency}${wg}`;
+  const adaptive=p.freshHedges||p.laneAdjustments?` — hedge ${p.freshHedges||0} / wave ${p.hedgeWaves||0}, lane adjust ${p.laneAdjustments||0}`:'';
+  if(p.executionMode==='PARALLEL_OBSERVED')return `Modalita: PARALLELA — picco ${p.observedPeakConcurrency||0} corridori reali — critical path: ${path}${reuse}${dynamic}${latency}${wg}${adaptive}`;
+  if(p.executionMode==='SERIAL_HOST_LIMITED')return `Modalita: SERIALE LIMITATA DALL'HOST — 1 corridore — critical path: ${path}${reuse}${dynamic}${latency}${wg}${adaptive}`;
+  if(p.executionMode==='DIRECT_FAST')return `Modalita: DIRECT FAST — nessun fan-out necessario — critical path: ${path}${reuse}${dynamic}${latency}${wg}${adaptive}`;
+  return `Modalita: SERIALE NECESSARIA — dipendenze/conflitti impediscono fan-out utile — critical path: ${path}${reuse}${dynamic}${latency}${wg}${adaptive}`;
 }
