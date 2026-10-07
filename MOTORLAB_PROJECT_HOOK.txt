@@ -26,6 +26,8 @@ MOTORLAB_PROJECT_CONTINUITY=required
 MOTORLAB_PROJECT_CHAT_POLICY=promptless-cross-chat-continuity
 MOTORLAB_NATIVE_ENGINE_POLICY=delivery-adapter-coexist-preserve
 MOTORLAB_VISIBLE_ACTIVATION_PROOF=required
+MOTORLAB_VERSIONED_BOOT_BANNER=required
+MOTORLAB_ALL_PROJECTS_REQUIRED=required
 MOTORLAB_DEFERRED_MATERIALIZATION=required
 MOTORLAB_EVENT_MEMORY=required
 MOTORLAB_DYNAMIC_PRUNING=required
@@ -39,7 +41,7 @@ PURPOSE
 Persistent streamflix-BV delivery hook. Every recognizable delivery chat activates MotorLab first, reconciles the central delivery continuity ledger with live state, preserves Visionflix as source lifecycle authority and resumes latest verified delivery work without transfer prompts.
 
 MANDATORY RULES
-1. MotorLab activates before substantive delivery work and first visible line is "⚙️ MotorLab attivo".
+1. MotorLab activates before substantive delivery work and first visible line is "⚙️ MotorLab rNN attivo", where rNN matches the pinned session release.
 2. No recurring activation/transfer prompt is required.
 3. Load MOTORLAB_PROJECT_STATE_STREAMFLIX_BV_V1.txt and reconcile live delivery refs/head/releases/jobs/artifacts before choosing a starting point.
 4. Visionflix remains source lifecycle authority; streamflix-BV remains delivery adapter only.
@@ -50,7 +52,7 @@ MANDATORY RULES
 9. MotorLab coexists with the existing delivery mechanism and must not alter Downloader semantics, release payloads or app behavior merely for MotorLab metadata.
 10. Apply Change Compatibility Guard, single-writer and lifecycle protections before writes.
 
-MOTORLAB_LOCAL_RELEASE_TARGET=2026.10.06-r23
+MOTORLAB_LOCAL_RELEASE_TARGET=2026.10.07-r29
 
 R23 ADOPTION
 MotorLab r23 is the active project control plane: eliminate reusable work first, recompute invalidated deltas, prioritize TTTA critical path, grow/prune the DAG dynamically, branch progressively and preserve material event memory. Native project engines remain authoritative.
