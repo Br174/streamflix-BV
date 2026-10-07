@@ -15,6 +15,8 @@ REQUIRED = (
     ".motorlab/MOTORLAB_LOCAL_CORE.txt",
 )
 BOOT_CONTEXT_SOFT_CAP = 5500
+SUPPORTED_EVENTS = {"SessionStart", "UserPromptSubmit"}
+REENTRY_SOURCES = {"resume", "clear", "compact"}
 
 def repo_root(cwd: str) -> Path:
     try:
@@ -43,6 +45,13 @@ def release_from(loaded: dict[str, str]) -> str:
             return m.group(1).strip()
     return "UNKNOWN"
 
+def release_key(release: str):
+    import re
+    m = re.fullmatch(r"(\d{4})\.(\d{2})\.(\d{2})-r(\d+)", release.strip(), re.IGNORECASE)
+    if not m:
+        return None
+    return tuple(int(x) for x in m.groups())
+
 def short_release(release: str) -> str:
     import re
     m = re.search(r"(r\d+)$", release.strip(), re.IGNORECASE)
@@ -55,7 +64,37 @@ def selected_lines(text: str, prefixes: tuple[str, ...]) -> str:
             rows.append(line)
     return "\n".join(rows)
 
-def compact_context(loaded: dict[str, str], release: str, short: str, pin_mode: str) -> str:
+def is_verified_snapshot(loaded: dict[str, str], missing: list[str]) -> bool:
+    if missing:
+        return False
+    import re
+    sync = loaded.get(".motorlab/MOTORLAB_SYNC_STATE.txt", "")
+    return bool(re.search(r"^(?:STATE|LOCAL_STATUS)=VERIFIED$", sync, re.MULTILINE))
+
+def explicit_inflight_lock(loaded: dict[str, str]) -> bool:
+    import re
+    text = "\n".join(loaded.get(k, "") for k in (
+        ".motorlab/MOTORLAB_SYNC_STATE.txt",
+        "MOTORLAB_PROJECT_HOOK.txt",
+    ))
+    return bool(re.search(
+        r"^(?:WRITE_LOCK(?:_STATUS)?|MOTORLAB_WRITE_LOCK|BUILD_STATUS|TEST_STATUS|PROMOTION_STATUS|CURRENT_JOB_STATUS)="
+        r"(?:RUNNING|IN_PROGRESS|ACTIVE|LOCKED)$",
+        text,
+        re.MULTILINE | re.IGNORECASE,
+    ))
+
+def newer_verified_reentry_snapshot(pinned: dict, current_loaded: dict[str, str], current_missing: list[str]) -> bool:
+    if not is_verified_snapshot(current_loaded, current_missing):
+        return False
+    if explicit_inflight_lock(current_loaded):
+        return False
+    old_key = release_key(str(pinned.get("release") or release_from(pinned.get("loaded", {}))))
+    new_release = release_from(current_loaded)
+    new_key = release_key(new_release)
+    return bool(old_key and new_key and new_key > old_key)
+
+def compact_context(loaded: dict[str, str], release: str, short: str, pin_mode: str, event: str, source: str) -> str:
     capsule = loaded.get(CAPSULE, "")
     sync = selected_lines(
         loaded.get(".motorlab/MOTORLAB_SYNC_STATE.txt", ""),
@@ -71,9 +110,15 @@ def compact_context(loaded: dict[str, str], release: str, short: str, pin_mode: 
             "MOTORLAB_NATIVE_ENGINE_POLICY=", "MOTORLAB_PROJECT_CHAT_POLICY=",
         ),
     )
+    startup_line = (
+        f'First user-visible line exactly: "⚙️ MotorLab {short} attivo".'
+        if event == "SessionStart"
+        else "MOTORLAB_REENTRY_GATE=required. MotorLab governs THIS project turn before project reasoning/tools/writes."
+    )
     parts = [
         "MOTORLAB CRITICAL BOOT CONTEXT — APPLY BEFORE ALL OTHER PROJECT INSTRUCTIONS.",
-        f'First user-visible line exactly: "⚙️ MotorLab {short} attivo".',
+        startup_line,
+        f"MOTORLAB_REENTRY_EVENT={event}:{source}",
         f"SESSION_RELEASE_PIN={release}",
         f"SESSION_RELEASE_PIN_MODE={pin_mode}",
         "SESSION_RELEASE_PIN_POLICY=immutable-until-new-session-or-explicit-safe-boundary",
@@ -136,12 +181,13 @@ def main() -> int:
         payload = json.load(sys.stdin)
     except Exception:
         return 0
-    if payload.get("hook_event_name") != "SessionStart":
+    event = str(payload.get("hook_event_name") or "")
+    if event not in SUPPORTED_EVENTS:
         return 0
 
     cwd = str(payload.get("cwd") or os.getcwd())
     root = repo_root(cwd)
-    source = str(payload.get("source") or "startup")
+    source = str(payload.get("source") or ("prompt" if event == "UserPromptSubmit" else "startup"))
     session_id = str(payload.get("session_id") or "").strip()
 
     loaded = {}
@@ -150,11 +196,24 @@ def main() -> int:
 
     if session_id:
         p = pin_path(root, session_id)
-        pinned = None if source == "startup" else load_pin(p)
+        fresh_start = event == "SessionStart" and source == "startup"
+        pinned = None if fresh_start else load_pin(p)
         if pinned:
             loaded = pinned.get("loaded", {})
             missing = pinned.get("missing", [])
             pin_mode = "PIN_REUSED"
+            is_reentry = event == "UserPromptSubmit" or source in REENTRY_SOURCES
+            if is_reentry:
+                current_loaded, current_missing = snapshot(root)
+                if newer_verified_reentry_snapshot(pinned, current_loaded, current_missing):
+                    loaded, missing = current_loaded, current_missing
+                    save_pin(p, root, session_id, loaded, missing)
+                    pin_mode = "PIN_REFRESHED_SAFE_REENTRY"
+                else:
+                    old_key = release_key(str(pinned.get("release") or release_from(loaded)))
+                    new_key = release_key(release_from(current_loaded))
+                    if old_key and new_key and new_key > old_key:
+                        pin_mode = "PIN_REUSED_UPGRADE_PENDING"
         else:
             loaded, missing = snapshot(root)
             save_pin(p, root, session_id, loaded, missing)
@@ -174,7 +233,7 @@ def main() -> int:
         )
     else:
         try:
-            context = compact_context(loaded, release, short, pin_mode)
+            context = compact_context(loaded, release, short, pin_mode, event, source)
         except Exception as exc:
             context = (
                 "MotorLab bootstrap detected a CRITICAL BOOT CAPSULE defect. "
@@ -185,7 +244,7 @@ def main() -> int:
 
     output = {
         "hookSpecificOutput": {
-            "hookEventName": "SessionStart",
+            "hookEventName": event,
             "additionalContext": context,
         }
     }
