@@ -1,8 +1,11 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.07-r28
+RELEASE=2026.10.07-r29
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
+ALL_PROJECTS_MOTORLAB=required
+FUTURE_PROJECT_AUTO_ONBOARD=required
+VERSIONED_BOOT_BANNER=required
 PROJECT_CONTINUITY=required
 LABELED_VISUAL_STATUS=required
 EXTENDED_VISUAL_STATUS=required
@@ -95,7 +98,7 @@ SESSION_RELEASE_PIN_RESUME_REUSE=required
 SAFE_BOUNDARY_AUTO_ADOPTION=required
 
 LOCAL FALLBACK CONTRACT
-- First user-visible line: ⚙️ MotorLab attivo
+- First user-visible line: ⚙️ MotorLab rNN attivo, where rNN is derived from the pinned session release; unversioned startup is invalid
 - Reconcile Project Continuity with newer live evidence before choosing a work starting point.
 - Preserve native project engines/lifecycle state.
 - Before every NEW write-capable application/project modification, initial mutation wording is intent only; perform read-only preparation, show pre-change report, then wait for Bruno approval.
@@ -294,7 +297,7 @@ R28 AUTOMATIC RELEASE FANOUT + SESSION PIN INHERITANCE
 - LAST_GOOD remains the immediately previous verified release.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.23
+MOTORLAB-SATELLITE-BUNDLE-V2.24
 Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
 Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
 
@@ -327,3 +330,11 @@ Revision 2.21: r26 inherits coordinated Triple Fresh Hedge, Adaptive Lane Pool a
 Revision 2.22: r27 inherits zero-idle immediate productive sidework plus separate same-task recovery and optional stale-primary replacement at the hard trigger.
 
 Revision 2.23: r28 inherits mandatory release fanout and full-snapshot per-session pinning with automatic safe-boundary adoption.
+
+R29 MANDATORY ALL-PROJECT VERSIONED BOOT INHERITANCE
+- Every current/future project activates MotorLab from first recognizable project context.
+- Unregistered future projects auto-onboard.
+- First visible line must be `⚙️ MotorLab rNN attivo` with rNN from the pinned session release.
+- Unknown release identity is a bootstrap defect; never fabricate the version.
+
+Revision 2.24: r29 inherits mandatory all-project activation, future-project auto-onboarding and versioned first-line startup proof.
