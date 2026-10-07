@@ -1,5 +1,5 @@
-MOTORLAB_SATELLITE_BUNDLE
-RELEASE=2026.09.30-r11
+MOTORLAB SATELLITE BUNDLE
+RELEASE=2026.10.06-r23
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -9,125 +9,250 @@ EXTENDED_VISUAL_STATUS=required
 HIGH_PRESENCE_NUMERIC_PROGRESS=required
 HARD_PROGRESS_VISIBILITY=required
 ROOT_CAUSE_CLOSURE=required
+ARTIFACT_FIRST_ROOT_CAUSE=required
+DUAL_ARTIFACT_OVERALL_PROGRESS=required
+POST_ARTIFACT_ROOT_CAUSE_QUEUE=required
+DELIVERED_ARTIFACT_IMMUTABILITY=required
 LIVE_EVENT_CLASSIFICATION=required
 CONTROL_PLANE_CI_SUPPRESSION=required
 CHANGE_COMPATIBILITY_GUARD=required
+CHANGE_COMPATIBILITY_PILLAR=required
 WATCHDOG=required
-PREVENTIVE_WATCHDOG=required
-MANUAL_LIGHTNING_RECOVERY=required
-MANUAL_LIGHTNING_SAVE_THEN_RESUME=required
-MONOTONIC_RECOVERY_FLOOR=required
-TWO_STRIKE_NO_PROGRESS=required
 RESUME_RECOVERY=required
 FOREGROUND_STALL_GUARD=required
 PROGRESS_REPORTING=required
 VISUAL_STATUS=required
 SINGLE_WRITER=required
 CHECKPOINT_RECOVERY=required
+POLLICINO_CONTINUITY=required
+EXTERNAL_SESSION_JOURNAL=required
+DUAL_LIVENESS_PROGRESS_SIGNAL=required
+TERMINAL_SEAL=required
+PRECOMPUTED_RESUME_READY=required
+POLLICINO_EXECUTOR_ADAPTER=required
+POLLICINO_TERMINAL_HOOKS=required
+FAST_ITERATION_NO_SPIN=required
+RISK_SCALED_LAB_ITERATION=required
+FOUR_DESIGN_PILLARS=required
+SPEED_PRIMARY_OPTIMIZATION=required
+TIME_TO_TESTABLE_ARTIFACT_KPI=required
+COMPLEXITY_BUDGET=required
+ADAPTIVE_DAG_EXECUTION=required
+CRITICAL_PATH_FIRST=required
+ADAPTIVE_RUNNER_FANOUT=required
+RUNNER_ISOLATION=required
+SINGLE_INTEGRATION_LANE=required
+CONTINUOUS_CONVERGENCE=required
+CORRECTION_RELAY=required
+BOUNDED_SPECULATIVE_EXECUTION=required
+EVIDENCE_LEARNING_LOOP=required
+INCREMENTAL_EVERYTHING=required
+EXECUTION_FABRIC=required
+FAST_DECISION_GATE=required
+READY_QUEUE_DISPATCH=required
+BATCHED_TOOL_CONCURRENCY=required
+OBSERVED_PARALLELISM_PROOF=required
+HOST_LIMIT_SERIAL_TRUTH=required
+GROUPED_RUNNER_STATUS=required
+WORK_ELIMINATION_FIRST=required
+CONTENT_ADDRESSED_REUSE=required
+INCREMENTAL_DELTA_EXECUTION=required
+DYNAMIC_DAG_GROWTH=required
+PROGRESSIVE_BRANCHING=required
+DYNAMIC_PRUNING=required
+EVENT_MEMORY=required
+DEFERRED_MATERIALIZATION=required
+CHANGE_HISTORY_REGISTRY=required
+SEMANTIC_CHANGE_LOOKUP=required
+SELECTIVE_EXACT_RESTORE=required
+HISTORICAL_BACKFILL_ON_DEMAND=required
+PRE_CHANGE_APPROVAL_GATE=required
+USER_CONFIRMED_RESTORE_REGISTER=required
+SIMPLE_STABLE_RESTORE_NUMBERS=required
+MULTI_CHANGE_ITEM_CONFIRMATION=required
+AUTHORITY_DATA_OWNERSHIP=required
+MOTORLAB_OPERATION_ID=required
+PERSISTENT_OPERATIONAL_STATE=required
+D1_GITHUB_RECONCILIATION=required
+KV_CACHE_NON_AUTHORITATIVE=required
+OPTIONAL_SERVICE_FAILSAFE=required
+OBSERVABILITY_DIAGNOSTICS=required
+POSTHOG_EVIDENCE_ONLY=required
+NOTION_STATUS_PROJECTION_ONLY=required
+GITBOOK_MANUAL_PROJECTION_ONLY=required
+SUPERPOWERS_SUBORDINATE=required
+CONTEXT7_ON_DEMAND=required
+FREE_FIRST_PLUGIN_ROUTING=required
+SERVICE_INTEGRATION_STATUS=required
+UPDATE_FAMILY_LIFECYCLE=required
+PAIRED_SAFETY_LAB=required
+EXECUTION_CONTINUITY=required
+NO_TIMED_CONTINUATION=required
 
 LOCAL FALLBACK CONTRACT
-- MotorLab activates before substantive project work when project/software-build context is visible.
 - First user-visible line: ⚙️ MotorLab attivo
-- Load project hook and project-specific central continuity ledger automatically.
-- Reconcile ledger with newer live repo/ref/head/provider/job/artifact evidence before choosing a starting point.
-- Classify newer live events as application work, MotorLab control-plane activity, external automation or unknown-before-reconcile before changing app lifecycle identity.
-- Preserve active operation, verified progress floor, completed step, pending verification and next safe step across chat ids.
-- No recurring activation or transfer prompt is required.
-- Live newer evidence outranks stale ledger, older registries and memory summaries.
-- Unfinished work continues through Resume Recovery under Watchdog coordination.
-- Manual ⚡ uses save-then-resume and monotonic recovery-floor rules.
-- Project Continuity updates at material state transitions and safe turn handoff when central write access exists.
-- A missed expected write-through is a Root Cause Closure problem; manual alignment alone is not definitive closure.
-- MotorLab-only control-plane commits should suppress unrelated CI/build triggers when the provider supports a safe skip mechanism, and repository trigger filters should exclude MotorLab-only paths where appropriate.
-- Change Compatibility Guard applies before writes.
-- Foreground Stall Guard applies before substantial/risky phases.
-- Only one writer may mutate the same project/ref/resource scope.
-- Project-native/domain engines are preserved and never replaced by MotorLab activation.
+- Reconcile Project Continuity with newer live evidence before choosing a work starting point.
+- Preserve native project engines/lifecycle state.
+- Before every NEW write-capable application/project modification, initial mutation wording is intent only; perform read-only preparation, show pre-change report, then wait for Bruno approval.
+- Apply Change Compatibility Guard and single-writer before writes.
+- Eligible LAB work uses risk-scaled Fast Iteration/No-Spin; HIGH-risk and CANDIDATA/MADRE retain full gates.
 
-CANONICAL LABELED VISUAL STATUS
-Every MotorLab status emoji shown to Bruno must include the canonical short label beside it:
-⚙️ MotorLab attivo
-🎆 Azione completata
-⚡ Risveglio / recupero
-✅ Problema risolto
-👍🏻 Procede tutto bene
-⚠️ Piccolo problema risolvibile
-🧭 Cambiare approccio
-🛑 Stop di sicurezza / blocco reale
-♻️ Una parte va rifatta
-💀 Tutto da rifare
-💯 Conclusione definitiva
-🔍 Ricerca soluzione
-🧩 Compatibile
-🐢 Lentezza rilevata
-💭 Elaborazione in corso
-⏳ Attesa esterna
-🧪 Test / verifica in corso
-🔄 Sincronizzazione in corso
 
-VISUAL SEMANTICS
-- preferred format: <emoji> <canonical label> — <context>;
-- repeated-fireworks/repeated-lightning counts are obsolete as user-facing level codes;
-- 🎆 marks an action/phase/milestone completed, not necessarily the whole request;
-- 💯 is reserved only for true end-to-end completion after all requested verification/delivery is complete;
-- ✅ requires Root Cause Closure permission, not symptom-only repair;
-- 🔍 means solution/cause search, not confirmed closure;
-- 🧩 requires compatibility/preflight evidence;
-- 🐢 means slow but still live/legitimate, not automatically stalled;
-- 💭 means high-level operational analysis and never private chain-of-thought;
-- ⏳ means legitimate external provider/job/service waiting;
-- 🧪 means tests/verification are still in progress;
-- 🔄 means synchronization/reconciliation is still in progress;
-- ⚡ remains for actual wake/recovery/health action.
+FOUR PILLARS + ADAPTIVE VELOCITY - R21+
+- Four permanent objectives: engine efficiency, automation/programming facilitation, final artifact quality, execution speed.
+- Execution speed is the primary optimization priority; TTTA is the primary comparable performance KPI.
+- Hard safety/correctness/security/data-integrity/signing/package/approval/lifecycle/project-native constraints still win.
+- Complexity must pay rent: prefer on-demand/reused/merged mechanisms over always-on overhead.
+- Eligible non-trivial work is decomposed into a dependency DAG; critical-path tasks receive priority.
+- Independent tasks start when their own prerequisites are ready; do not impose global barriers without a dependency reason.
+- Runner fan-out is adaptive; one runner is preferred when coordination overhead exceeds expected savings.
+- Parallel writes require disjoint isolated scopes; one integration lane owns final artifact state.
+- Converge compatible outputs continuously and return corrections only to affected scopes.
+- Bounded speculative alternatives are allowed only when isolated, safe and likely to beat serial trial without hidden paid/quota abuse.
+- Prefer incremental inspection/test/build/cache reuse; invalidate only affected surfaces when evidence permits.
+- Learn from verified errors, Root Cause, searches/research, timings, build/cache/provider behavior, compatibility conflicts, recovery and successful/failed strategies.
+- Lessons are bounded, evidence-backed, context/invalidation aware, advisory only and never replace current Git/source/provider truth or approval.
 
-HARD NUMERIC PROGRESS VISIBILITY - R11+
-Classic form remains:
-Progresso MotorLab: <N>%
-For a substantial active/pending/new operation:
-- after the activation banner, establish/reconstruct and display an evidence-based N% before entering long opaque work;
-- every meaningful user-facing operational status MUST include the current N% when the surface permits;
-- before a long build/test/provider phase, show the current N%;
-- material provider/job phase changes repeat or advance the N% rather than remaining silent;
-- repeated same percentage is correct when state changes without a newly verified milestone;
-- do not invent progress merely for visibility;
-- a new chat/turn does not reset or suppress the percentage.
 
-ROOT CAUSE CLOSURE - R11+
-For every real defect/anomaly/stale state/unexpected trigger/failure:
-- contain/correct the immediate symptom safely;
-- determine why it occurred using evidence;
-- distinguish confirmed cause, leading hypothesis, external cause or unknown cause;
-- correct/contain the causal mechanism when possible;
-- inspect the smallest relevant recurrence surface;
-- add prevention/regression protection when justified;
-- do not use ✅ Problema risolto from a one-off retry, restart or manual alignment alone;
-- root-cause/prevention work remains part of the operation and can keep progress below 100%.
+R22+ OPERATIONAL EXECUTION FABRIC
+- Velocity remains the only scheduler; Execution Fabric is its runtime dispatcher.
+- Use DIRECT_FAST for atomic deterministic work when fan-out overhead is not justified.
+- For eligible non-trivial work, maintain READY/RUNNING/COMPLETED state and dispatch compatible READY nodes immediately.
+- Batch independent read/tool operations in the same host cycle where supported.
+- Durable independent nodes may overlap through Background Execution.
+- Never wait for unrelated runners merely to reach a global barrier.
+- Same-scope writers never overlap; isolated writes still enter final state through one integration lane.
+- Correction relay reworks only affected scopes and preserves valid completed work.
+- Substantial work records observed execution mode, peak concurrency, critical path, overlap evidence and host limitation.
+- PARALLEL_OBSERVED requires real evidence; installed capability is not proof.
+- When useful concurrency is impossible because of the host, report SERIAL_HOST_LIMITED.
+- Status groups COMPLETATI INSIEME / IN CORSO INSIEME / SBLOCCATI / CRITICAL PATH instead of serial narration.
+- Reference executor behavior is defined by central MOTORLAB_EXECUTION_FABRIC_V1.txt and templates/execution/motorlab_execution_fabric.mjs when the local executor can host it.
 
-PROJECT CONTINUITY / LIVE EVENT CLASSIFICATION - R11+
-- a stale ledger is reconciled from newer live evidence but unexpected missed write-through also opens Root Cause Closure;
-- MotorLab/control-plane-only commits/jobs do not silently create a new app LAB/MADRE/CANDIDATA or new app progress scale;
-- if control-plane-only changes unexpectedly trigger app build/release workflows, classify the trigger as a causal defect and correct trigger hygiene when safe.
 
-CONTROL-PLANE CI SUPPRESSION - R11+
-For commits that modify only MotorLab control-plane metadata such as `.motorlab/**` or `MOTORLAB_PROJECT_HOOK.txt`:
-- use a provider-supported CI skip marker/mechanism when safe and available (for GitHub push workflows, e.g. a supported skip-CI commit marker);
-- prefer repository path filters that exclude MotorLab-only metadata from application build/release workflows;
-- do not suppress CI when the same commit also changes application source/configuration that legitimately requires validation;
-- verify that prevention does not hide required tests for real app changes.
+R23+ INCREMENTAL DYNAMIC EXECUTION
+- Before starting a runner, check whether valid reuse can eliminate the task.
+- Cache/result reuse is content/input/toolchain/policy aware and non-authoritative.
+- Recompute only invalidated deltas when dependency evidence permits.
+- After work elimination, prioritize remaining critical-path nodes before non-blocking branches.
+- The active DAG may grow from verified discoveries without restarting completed valid work.
+- Start FAST LINE; escalate to MINI TREE/FULL DYNAMIC GRAPH only when branching pays for itself.
+- Prune pending obsolete/dominated nodes immediately when safe; never prune mandatory safety/lifecycle verification.
+- Material events feed the existing operational event memory; never store chain-of-thought.
+- Defer large intermediate materialization until downstream use, verification or delivery requires it.
+- Bounded speculative racing is reserved for critical uncertainty, not as a substitute for cache/incrementality.
+- Proof should distinguish work avoided, work reduced, work parallelized and serial critical-path work.
+
+ARTIFACT-FIRST ROOT CAUSE - R15+
+- When Bruno expects an APK/ZIP/testable artifact for an approved defect/regression, artifact delivery is the default critical path.
+- Preferred order: repair -> risk-appropriate verify -> artifact -> deliver -> causal/prevention follow-up -> definitive closure.
+- Safely deferrable causal work goes to POST_ARTIFACT_ROOT_CAUSE_QUEUE and must remain durably pending.
+- Root Cause Closure remains mandatory; ordering changes, obligation does not.
+- Non-deferrable safety/security/signing/data-integrity/unreliable-build/high-risk causes remain before artifact delivery when needed to trust the artifact.
+- After delivery, preserve exact artifact/ref/checksum while Bruno tests it; later prevention builds are distinct follow-up LAB/ref/artifacts.
+- `Artefatto: 100%` may coexist with `Progresso MotorLab complessivo: <100%` while causal items remain.
+- Do not use ✅ Problema risolto or 💯 Conclusione definitiva while mandatory causal work is pending.
+- Several deferrable defects encountered on the way to one artifact must not force serial full causal archaeology before packaging.
+
+R16 AUTHORITY / PERSISTENT STATE
+- GitHub is durable technical authority.
+- D1 is live operational authority when connected and reconciled.
+- KV is reconstructible cache only and must never contain unique-only critical state.
+- One MOTORLAB_OPERATION_ID correlates one logical operation across checkpoints, artifacts, diagnostics and projections.
+- Optional service loss must not make MotorLab unusable.
+- Never claim provider/plugin integration is live until the connection/resources are verified.
+- MOTORLAB_SERVICE_INTEGRATION_STATUS_V1.txt tracks CORE_READY vs real connection/resource/project adoption.
+
+R16 OBSERVABILITY / KNOWLEDGE ROUTING
+- PostHog supplies runtime evidence only; it cannot authorize changes or lifecycle decisions.
+- Notion is Bruno-facing status projection only.
+- GitBook is architecture/manual projection only.
+- Superpowers may improve engineering method but is subordinate to MotorLab gates and scope.
+- Context7 is used only when current/versioned external documentation materially reduces uncertainty.
+- Auxiliary plugin usage is free-first and quota-aware; no hidden paid upgrade.
+
+FOUNDATIONAL CHANGE COMPATIBILITY PILLAR - R19+
+- Mandatory before every write-capable MotorLab/project change.
+- Inspect authoritative current state for existing equivalent/overlapping rules/functions/paths.
+- ONE RESPONSIBILITY = ONE ACTIVE COORDINATOR.
+- Reuse/extend/merge the responsible mechanism; explicitly supersede obsolete/conflicting paths.
+- Never accumulate avoidable duplicate writers/resolvers/caches/state machines/UI-domain decisions for one responsibility.
+- Fast paths, Velocity, automation, restore, migration and optimization cannot bypass this pillar.
+
+PAIRED SAFETY LAB - R18+
+- Every verified LAB NN aggiornamento also produces LAB di sicurezza NN from the same functional source state.
+- Safety uses a different package/family and unique test-only signing certificate.
+- Safety is immutable and may seed a NEW active update family if the current family later corrupts.
+- Safety is not CANDIDATA and cannot promote directly to MADRE.
+
+ANDROID UPDATE FAMILY - R17+
+- When update-family mode is active, later LAB aggiornamento builds keep one stable applicationId + signing certificate and increase versionCode.
+- Bruno-facing revision names are LAB NN aggiornamento while internal family identity stays stable.
+- LAB -> CANDIDATA creates a new immutable Android family from the approved method/state; it does not convert or mutate LAB.
+- Approved CANDIDATA -> MADRE promotes the same candidate source/family identity according to project signing policy.
+- A LAB test key must never silently become a production/MADRE key.
+
+TECHNICAL CHANGE HISTORY
+Technical Change History remains Git-backed provenance/search and is separate from the visible Bruno-confirmed restore list.
+
+REGISTRO MODIFICHE E RIPRISTINI - R14+
+- Visible register contains only specific modifications Bruno confirms as working and wants conserved.
+- Plain stable numbers 1,2,3...; one feature family keeps one number.
+- Multi-change work registers only item(s) Bruno specifically identifies.
+- Failed/unconfirmed/ambiguous attempts never enter the visible list.
+
+CONTROL-PLANE CI SUPPRESSION
+MotorLab-only metadata changes should not launch unrelated app workflows where safe provider filters/skip mechanisms support suppression.
 
 CENTRAL SYNC
-Compare local release with MOTORLAB_RELEASE_MANIFEST_V1.txt at safe boundaries only. Never switch release mid active write/build/test/promotion. Preserve current verified local bundle as LAST_GOOD before adoption.
+Compare local release with central manifest only at safe boundaries. Preserve current VERIFIED local bundle as LAST_GOOD before adoption. Never switch release mid active write/build/test/promotion.
 
-FALLBACK
-If central state is unavailable, use VERIFIED local bundle/LAST_GOOD and live project evidence conservatively.
+FUTURE PROJECTS
+Future projects inherit hard pre-change approval, Root Cause Closure, Artifact-First ordering, dual progress, Fast Iteration/No-Spin, technical history, visible restore register, r16 multi-service authority/persistent-state/observability/knowledge-routing contracts, r21 Four-Pillar adaptive Velocity/learning/TTTA rules, r22 Execution Fabric real-dispatch/proof behavior and r23 incremental dynamic work-elimination rules.
 
 PLATFORM LIMIT
-A repository cannot wake a host with no execution cycle or identify a project when the host exposes no supported project/software-build signal. Progress updates require a user-visible execution/control point.
+Repository text cannot wake a host with no execution cycle and cannot continue invisibly without a real durable executor.
 
 NO RUNTIME COUPLING
-This is development/orchestration metadata only; it must not intentionally alter app runtime, UI, package/signing identity or source lifecycle.
+This bundle is orchestration metadata only and must not intentionally alter app runtime/UI/package/signing/native engines. Project telemetry SDKs and provider bindings require separate approved project changes.
+
+POLLICINO CONTINUITY - R20+
+- Pollicino remains external control-plane infrastructure; never inject continuity breadcrumbs into application/domain code.
+- Supported persistent/queryable executors publish real liveness plus progress fingerprint evidence.
+- Watchdog owns stall/loop classification; Resume Recovery owns continuation.
+- Controlled ends publish a terminal seal.
+- Missing supported liveness without a seal triggers external read-only pre-reconciliation and RESUME_READY preparation before a later `continua` when the durable sentinel is available.
+- Opaque normal ChatGPT thinking is not a trustworthy ping target unless the host exposes a real side-channel.
+- Long risky phases should use observable persistent execution when possible; otherwise use bounded checkpoints.
+- Supported Codex satellites install the external `.codex/hooks/motorlab_pollicino.py` sidecar adapter and lifecycle hooks when safe; the adapter is not application code.
+- Adopted private-project satellites may self-enroll without a long-lived secret when D1 explicitly marks POLLICINO_SOURCE_PROOF_ENABLED and the local Git HEAD matches the registered project/active-operation SHA; the Worker then returns only an ephemeral session token.
+- Because project operational heads are mutable, adopted private satellites also publish `POLLICINO_PROOF_HEAD=<adopted-git-sha>` inside the D1 satellite-state string; this stable proof is preferred until the next verified satellite adoption.
+- The same adopted proof is persisted locally in `.motorlab/MOTORLAB_SYNC_STATE.txt` (and optionally the project hook); the Codex sidecar uses it before mutable Git HEAD. Metadata-only commits do not rotate it.
+- Alive-but-stalled evidence may precompute `READY_STALL_SUSPECTED`; resumed progress supersedes it.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.1
-Revision 2.0: r11 adds ROOT_CAUSE_CLOSURE, LIVE_EVENT_CLASSIFICATION and HARD_PROGRESS_VISIBILITY.
-Revision 2.1: r11 adds CONTROL_PLANE_CI_SUPPRESSION to prevent metadata-only MotorLab sync from launching unrelated app pipelines.
+MOTORLAB-SATELLITE-BUNDLE-V2.18
+Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
+Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
+
+Revision 2.8: r18 adds paired immutable LAB di sicurezza checkpoints and recovery-floor semantics.
+
+Revision 2.9: r19 adds foundational Change Compatibility Pillar for all current/future project satellites.
+
+Revision 2.10: r20 adds external Pollicino journal/liveness/progress/terminal-seal/RESUME_READY markers while preserving app-code isolation.
+
+Revision 2.11: completes r20 with the Codex external sidecar adapter, terminal hooks and stall-precompute semantics.
+
+Revision 2.12: r20 adds D1-gated source-proof self-enrollment and ephemeral session tokens for private adopted projects while preserving HMAC compatibility.
+
+Revision 2.13: r20 adds explicit stable POLLICINO_PROOF_HEAD inheritance so secretless enrollment survives later operational source-head reconciliation.
+
+Revision 2.14: r20 persists and consumes the stable local sidecar-adoption proof so later metadata-only commits do not break source-proof enrollment.
+
+Revision 2.15: r20 Codex sidecar emits an immediate synchronous liveness pulse on active hooks before starting the detached daemon, eliminating first-heartbeat startup ambiguity.
+
+Revision 2.16: r21 adds Four-Pillar TTTA-first adaptive Velocity markers, critical-path DAG scheduling, isolated runner fan-out, continuous convergence, incremental execution, complexity budget and bounded evidence learning.
+
+Revision 2.17: r22 adds operational Execution Fabric markers, Fast Decision Gate, ready-queue/batched dispatch, observed Proof of Parallelism, host-limited truthfulness and grouped runner status.
+
+Revision 2.18: r23 adds work-elimination-first, content-addressed reuse, incremental delta execution, dynamic DAG growth/pruning, progressive branching, event memory and deferred materialization markers.
