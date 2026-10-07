@@ -40,6 +40,11 @@ def release_from(loaded: dict[str, str]) -> str:
             return m.group(1).strip()
     return "UNKNOWN"
 
+def short_release(release: str) -> str:
+    import re
+    m = re.search(r"(r\d+)$", release.strip(), re.IGNORECASE)
+    return m.group(1).lower() if m else ""
+
 def pin_path(root: Path, session_id: str) -> Path:
     base = os.environ.get("MOTORLAB_SESSION_PIN_DIR")
     if base:
@@ -115,17 +120,19 @@ def main() -> int:
         loaded, missing = snapshot(root)
 
     release = release_from(loaded)
-    if missing:
+    short = short_release(release)
+    if missing or not short:
+        defect = f"Missing/unreadable: {', '.join(missing)}." if missing else f"Invalid/unknown MotorLab release identity: {release}."
         context = (
             "MotorLab bootstrap detected a control-plane defect. "
-            f"Missing/unreadable: {', '.join(missing)}. "
+            + defect + " "
             "Use only safe read-only inspection until a verified MotorLab local fallback is restored. "
-            "Do not invent MotorLab policy or silently continue write-capable project changes."
+            "Do not invent the MotorLab version or silently continue write-capable project changes."
         )
     else:
         parts = [
             "MotorLab bootstrap is mandatory for this project session.",
-            'First user-visible line: "⚙️ MotorLab attivo".',
+            f'First user-visible line exactly: "⚙️ MotorLab {short} attivo".',
             f"SESSION_RELEASE_PIN={release}",
             f"SESSION_RELEASE_PIN_MODE={pin_mode}",
             "SESSION_RELEASE_PIN_POLICY=immutable-until-new-session-or-explicit-safe-boundary",
