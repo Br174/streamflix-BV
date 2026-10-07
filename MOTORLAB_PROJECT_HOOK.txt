@@ -12,6 +12,7 @@ MOTORLAB_POLLICINO_MODULE=MOTORLAB_POLLICINO_CONTINUITY_V1.txt
 MOTORLAB_PERSISTENT_OPERATIONAL_STATE_MODULE=MOTORLAB_PERSISTENT_OPERATIONAL_STATE_V1.txt
 MOTORLAB_EXECUTION_FABRIC_MODULE=MOTORLAB_EXECUTION_FABRIC_V1.txt
 MOTORLAB_VELOCITY_LAYER_MODULE=MOTORLAB_VELOCITY_LAYER_V1.txt
+MOTORLAB_BOOT_CAPSULE=.motorlab/MOTORLAB_BOOT_CAPSULE.txt
 MOTORLAB_LOCAL_CORE=.motorlab/MOTORLAB_LOCAL_CORE.txt
 MOTORLAB_LOCAL_LAST_GOOD=.motorlab/MOTORLAB_LOCAL_CORE_LAST_GOOD.txt
 MOTORLAB_LOCAL_SYNC_STATE=.motorlab/MOTORLAB_SYNC_STATE.txt
@@ -52,7 +53,7 @@ MANDATORY RULES
 9. MotorLab coexists with the existing delivery mechanism and must not alter Downloader semantics, release payloads or app behavior merely for MotorLab metadata.
 10. Apply Change Compatibility Guard, single-writer and lifecycle protections before writes.
 
-MOTORLAB_LOCAL_RELEASE_TARGET=2026.10.07-r29
+MOTORLAB_LOCAL_RELEASE_TARGET=2026.10.07-r30
 
 R23 ADOPTION
 MotorLab r23 is the active project control plane: eliminate reusable work first, recompute invalidated deltas, prioritize TTTA critical path, grow/prune the DAG dynamically, branch progressively and preserve material event memory. Native project engines remain authoritative.
@@ -62,3 +63,6 @@ MOTORLAB-PROJECT-HOOK-V1.6
 Established: 2026-09-29
 Revision 1.5: r8 pre-response MotorLab gate plus canonical promptless cross-chat streamflix-BV continuity ledger.
 Revision: r23 incremental dynamic execution adopted; obsolete active satellite semantics are superseded while LAST_GOOD rollback remains preserved.
+
+MOTORLAB_CRITICAL_BOOT_CAPSULE=required
+MOTORLAB_CAPSULE_FIRST_CONTEXT=required

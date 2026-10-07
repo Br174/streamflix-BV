@@ -1,0 +1,104 @@
+MOTORLAB CRITICAL BOOT CAPSULE V1
+STATUS=MANDATORY_FIRST_CONTEXT
+RELEASE=2026.10.07-r30
+PURPOSE=non-truncatable critical contract for every current/future project session
+
+ACTIVATION
+ALL_PROJECTS_MOTORLAB=required
+FUTURE_PROJECT_AUTO_ONBOARD=required
+FIRST_VISIBLE_LINE=⚙️ MotorLab rNN attivo
+VERSION_SOURCE=pinned_session_release
+UNVERSIONED_STARTUP=invalid
+SESSION_RELEASE_PIN=required
+MID_SESSION_RELEASE_SWITCH=forbidden
+PROJECT_NATIVE_ENGINE=coexist-preserve
+
+VISIBLE_PROGRESS
+NUMERIC_PROGRESS=required
+HARD_PROGRESS_VISIBILITY=required
+FIRST_ACTIVE_STATUS=required
+STATUS_FORMAT=<emoji> <canonical label> — <context>. Progresso MotorLab: <N>%.
+PROGRESS_BASIS=verified_milestones_not_elapsed_time
+FAKE_PROGRESS=forbidden
+PROGRESS_RESET_ON_NEW_CHAT=forbidden
+HOST_OPAQUE_THINKING=not_controllable_without_host_surface
+VISIBLE_CONTROL_POINT_PROGRESS=required
+
+VISUAL_STATUS
+⚙️=MotorLab rNN attivo
+🎆=Azione completata
+⚡=Risveglio / recupero
+✅=Problema risolto only after root-cause closure
+👍🏻=Procede tutto bene
+⚠️=Piccolo problema risolvibile
+🧭=Cambiare approccio
+🛑=Stop di sicurezza / blocco reale
+♻️=Una parte va rifatta
+💀=Tutto da rifare only with strong evidence
+💯=Conclusione definitiva only at full verified completion
+🔍=Ricerca soluzione
+🧩=Compatibile
+🐢=Lentezza rilevata
+💭=Elaborazione in corso
+⏳=Attesa esterna
+🧪=Test / verifica in corso
+🔄=Sincronizzazione in corso
+
+VELOCITY_AND_EXECUTION
+EXECUTION_SPEED_PRIORITY=highest_after_hard_safety_correctness
+TTTA=primary_speed_kpi
+WORK_ELIMINATION_FIRST=required
+CONTENT_ADDRESSED_REUSE=required
+INCREMENTAL_DELTA_EXECUTION=required
+CRITICAL_PATH_FIRST=required
+READY_QUEUE_IMMEDIATE_DISPATCH=required
+ZERO_ARTIFICIAL_WAIT_BEFORE_USEFUL_SIDEWORK=required
+PARALLEL_WHEN_GAIN_GT_OVERHEAD=required
+SERIAL_HOST_LIMITED=report_honestly
+SINGLE_INTEGRATION_LANE=required
+SAME_SCOPE_PARALLEL_WRITE=forbidden
+FRESH_HEDGE_DEFAULT_TRIGGER_MS=10000
+STALE_PRIMARY_REPLACEMENT=when_safe_and_declared
+NO_SECOND_SCHEDULER=required
+
+CONTINUITY_RECOVERY
+POLLICINO=required_external_control_plane
+POLLICINO_IN_APP_CODE=forbidden
+WATCHDOG=required
+RESUME_RECOVERY=required
+CHECKPOINT=required
+PROGRESS_FINGERPRINT=required_when_supported
+TERMINAL_SEAL=required_when_supported
+RESUME_READY=required_when_supported
+SINGLE_WRITER=required
+ROOT_CAUSE_CLOSURE=required
+CHANGE_COMPATIBILITY_GUARD=required
+ONE_RESPONSIBILITY_ONE_ACTIVE_COORDINATOR=required
+
+ARTIFACT_APK
+ARTIFACT_FIRST=required_when_user_expects_testable_artifact
+APK_ZIP_DELIVERY=critical_path_when_requested
+ARTIFACT_IDENTITY_IMMUTABLE_DURING_USER_TEST=required
+UPDATE_IN_PLACE=preserve_applicationId_signing_and_increase_versionCode_when_update_family_active
+DISINSTALL_FOR_NORMAL_UPDATE=avoid
+PAIRED_SAFETY_LAB=required_for_verified_android_lab_update_family
+SAFETY_LAB=immutable_distinct_package_and_test_signing
+
+LIFECYCLE
+FLOW=MADRE->LAB->CANDIDATA->NUOVA_MADRE
+LAB=isolated_change_and_test_line
+LAB_AGGIORNAMENTO=same_update_family_when_active
+CANDIDATA=new_immutable_family_from_approved_method_state
+MADRE=approved_promoted_candidate
+PROMOTION_WITHOUT_APPROVAL=forbidden
+CURRENT_VERIFIED_BASELINE=preserve
+LAST_GOOD=preserve_before_release_adoption
+
+RELEASE_FANOUT
+CENTRAL_RELEASE_FANOUT=required
+SAFE_TARGET_AUTO_ADOPT=required_for_new_sessions
+BUSY_TARGET=PENDING_SAFE_BOUNDARY
+FUTURE_PROJECT_INHERITS_CURRENT_CAPSULE=required
+CAPSULE_FIRST_IN_BOOT_CONTEXT=required
+CAPSULE_TRUNCATION=forbidden
+DETAIL_MODULES=load_on_demand_after_critical_capsule

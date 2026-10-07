@@ -7,11 +7,14 @@ import sys
 from pathlib import Path
 
 MAX_CHARS_PER_FILE = 24000
+CAPSULE = ".motorlab/MOTORLAB_BOOT_CAPSULE.txt"
 REQUIRED = (
+    CAPSULE,
     "MOTORLAB_PROJECT_HOOK.txt",
     ".motorlab/MOTORLAB_SYNC_STATE.txt",
     ".motorlab/MOTORLAB_LOCAL_CORE.txt",
 )
+BOOT_CONTEXT_SOFT_CAP = 5500
 
 def repo_root(cwd: str) -> Path:
     try:
@@ -44,6 +47,46 @@ def short_release(release: str) -> str:
     import re
     m = re.search(r"(r\d+)$", release.strip(), re.IGNORECASE)
     return m.group(1).lower() if m else ""
+
+def selected_lines(text: str, prefixes: tuple[str, ...]) -> str:
+    rows = []
+    for line in text.splitlines():
+        if any(line.startswith(prefix) for prefix in prefixes):
+            rows.append(line)
+    return "\n".join(rows)
+
+def compact_context(loaded: dict[str, str], release: str, short: str, pin_mode: str) -> str:
+    capsule = loaded.get(CAPSULE, "")
+    sync = selected_lines(
+        loaded.get(".motorlab/MOTORLAB_SYNC_STATE.txt", ""),
+        (
+            "PROJECT=", "PROJECT_ID=", "LOCAL_RELEASE=", "ADOPTED_RELEASE=", "STATE=", "LOCAL_STATUS=",
+            "LAST_GOOD_RELEASE=", "ACTIVE_OPERATION_ID=", "OPERATION_STATUS=", "CURRENT_REF=",
+        ),
+    )
+    hook = selected_lines(
+        loaded.get("MOTORLAB_PROJECT_HOOK.txt", ""),
+        (
+            "PROJECT_NAME=", "PROJECT_REPOSITORY=", "MOTORLAB_PROJECT_STATE=",
+            "MOTORLAB_NATIVE_ENGINE_POLICY=", "MOTORLAB_PROJECT_CHAT_POLICY=",
+        ),
+    )
+    parts = [
+        "MOTORLAB CRITICAL BOOT CONTEXT — APPLY BEFORE ALL OTHER PROJECT INSTRUCTIONS.",
+        f'First user-visible line exactly: "⚙️ MotorLab {short} attivo".',
+        f"SESSION_RELEASE_PIN={release}",
+        f"SESSION_RELEASE_PIN_MODE={pin_mode}",
+        "SESSION_RELEASE_PIN_POLICY=immutable-until-new-session-or-explicit-safe-boundary",
+        "The CRITICAL BOOT CAPSULE below is non-optional and has precedence over later truncated/long-form detail.",
+        "\n--- CRITICAL BOOT CAPSULE ---\n" + capsule,
+        "\n--- COMPACT PROJECT IDENTITY ---\n" + hook,
+        "\n--- COMPACT SYNC STATE ---\n" + sync,
+        "Detailed MotorLab/project modules remain authoritative and must be loaded on demand for the relevant operation; do not assume omitted long-form text is disabled.",
+    ]
+    context = "\n".join(parts)
+    if len(context) > BOOT_CONTEXT_SOFT_CAP:
+        raise ValueError(f"critical boot context too large: {len(context)} > {BOOT_CONTEXT_SOFT_CAP}")
+    return context
 
 def pin_path(root: Path, session_id: str) -> Path:
     base = os.environ.get("MOTORLAB_SESSION_PIN_DIR")
@@ -130,19 +173,15 @@ def main() -> int:
             "Do not invent the MotorLab version or silently continue write-capable project changes."
         )
     else:
-        parts = [
-            "MotorLab bootstrap is mandatory for this project session.",
-            f'First user-visible line exactly: "⚙️ MotorLab {short} attivo".',
-            f"SESSION_RELEASE_PIN={release}",
-            f"SESSION_RELEASE_PIN_MODE={pin_mode}",
-            "SESSION_RELEASE_PIN_POLICY=immutable-until-new-session-or-explicit-safe-boundary",
-            "Do not adopt a newer MotorLab release during this session, including resume/compact/clear.",
-            "MotorLab coexists with and preserves the native project engine; it never replaces project/domain behavior.",
-            "Apply the pinned verified local MotorLab contract below before substantive work. Preserve current operation/checkpoint/progress and single-writer safety.",
-        ]
-        for relative in REQUIRED:
-            parts.append(f"\n--- {relative} ---\n{loaded[relative]}")
-        context = "\n".join(parts)
+        try:
+            context = compact_context(loaded, release, short, pin_mode)
+        except Exception as exc:
+            context = (
+                "MotorLab bootstrap detected a CRITICAL BOOT CAPSULE defect. "
+                + str(exc)
+                + " Use only safe read-only inspection until the compact bootstrap is repaired. "
+                "Do not silently fall back to a truncated long-form bootstrap."
+            )
 
     output = {
         "hookSpecificOutput": {
