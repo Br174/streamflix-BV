@@ -17,6 +17,16 @@ REQUIRED = (
 BOOT_CONTEXT_SOFT_CAP = 5500
 SUPPORTED_EVENTS = {"SessionStart", "UserPromptSubmit"}
 REENTRY_SOURCES = {"resume", "clear", "compact"}
+REQUIRED_CAPSULE_MARKERS = (
+    "SECOND_VISIBLE_LINE=✨ MotorLab — I Fantastici 20 attivati",
+    "REENTRY_GATE=required_every_project_user_prompt_and_resume",
+    "NUMERIC_PROGRESS=required",
+    "WATCHDOG=required",
+    "RESUME_RECOVERY=required",
+    "POLLICINO=required_external_control_plane",
+    "SINGLE_WRITER=required",
+    "BUILD_FAST_LANE=required",
+)
 
 def repo_root(cwd: str) -> Path:
     try:
@@ -110,8 +120,12 @@ def compact_context(loaded: dict[str, str], release: str, short: str, pin_mode: 
             "MOTORLAB_NATIVE_ENGINE_POLICY=", "MOTORLAB_PROJECT_CHAT_POLICY=",
         ),
     )
+    if any(marker not in capsule for marker in REQUIRED_CAPSULE_MARKERS):
+        raise ValueError("required full-suite capability markers are missing")
+    if f"RELEASE={release}" not in capsule.splitlines():
+        raise ValueError("pinned release does not match complete-suite capsule")
     startup_line = (
-        f'First user-visible line exactly: "⚙️ MotorLab {short} attivo".'
+        f'First two visible lines: "⚙️ MotorLab {short} attivo" then "✨ MotorLab — I Fantastici 20 attivati".'
         if event == "SessionStart"
         else "MOTORLAB_REENTRY_GATE=required. MotorLab governs THIS project turn before project reasoning/tools/writes."
     )
