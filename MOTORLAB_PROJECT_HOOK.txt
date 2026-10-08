@@ -53,7 +53,7 @@ MANDATORY RULES
 9. MotorLab coexists with the existing delivery mechanism and must not alter Downloader semantics, release payloads or app behavior merely for MotorLab metadata.
 10. Apply Change Compatibility Guard, single-writer and lifecycle protections before writes.
 
-MOTORLAB_LOCAL_RELEASE_TARGET=2026.10.08-r31
+MOTORLAB_LOCAL_RELEASE_TARGET=2026.10.08-r33
 
 R23 ADOPTION
 MotorLab r23 is the active project control plane: eliminate reusable work first, recompute invalidated deltas, prioritize TTTA critical path, grow/prune the DAG dynamically, branch progressively and preserve material event memory. Native project engines remain authoritative.
@@ -70,3 +70,6 @@ MOTORLAB_CAPSULE_FIRST_CONTEXT=required
 MOTORLAB_REENTRY_GATE_MODULE=MOTORLAB_REENTRY_GATE_V1.txt
 MOTORLAB_PROJECT_TURN_REENTRY=required
 MOTORLAB_USER_PROMPT_BOOTSTRAP=required
+
+MOTORLAB_BUILD_MICRO_ACCELERATION=non_compiler_only
+MOTORLAB_KOTLIN_KSP_TUNING=explicit_approval_only
