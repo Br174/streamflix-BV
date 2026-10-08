@@ -1,6 +1,6 @@
 MOTORLAB CRITICAL BOOT CAPSULE V1
 STATUS=MANDATORY_FIRST_CONTEXT
-RELEASE=2026.10.08-r31
+RELEASE=2026.10.08-r32
 PURPOSE=non-truncatable critical contract for every current/future project session
 
 ACTIVATION
@@ -91,7 +91,12 @@ ARTIFACT_IDENTITY_IMMUTABLE_DURING_USER_TEST=required
 UPDATE_IN_PLACE=preserve_applicationId_signing_and_increase_versionCode_when_update_family_active
 DISINSTALL_FOR_NORMAL_UPDATE=avoid
 PAIRED_SAFETY_LAB=required_for_verified_android_lab_update_family
+SAFETY_SOURCE_CHECKPOINT=github_immutable_ref
+SAFETY_APK_MATERIALIZATION=on_demand
+SAFETY_SECOND_GRADLE_DEFAULT=forbidden
 SAFETY_LAB=immutable_distinct_package_and_test_signing
+BUILD_FAST_LANE=required
+ARTIFACT_READY_DELIVERY=immediate_when_verified
 
 LIFECYCLE
 FLOW=MADRE->LAB->CANDIDATA->NUOVA_MADRE
