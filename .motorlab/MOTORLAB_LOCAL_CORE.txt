@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.08-r33
+RELEASE=2026.10.08-r34
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -11,6 +11,8 @@ CRITICAL_BOOT_CAPSULE=required
 ALL_PROJECTS_MOTORLAB=required
 FUTURE_PROJECT_AUTO_ONBOARD=required
 VERSIONED_BOOT_BANNER=required
+DUAL_FANTASTICI20_BANNER=required
+WHOLE_SUITE_REENTRY=required
 PROJECT_CONTINUITY=required
 LABELED_VISUAL_STATUS=required
 EXTENDED_VISUAL_STATUS=required
@@ -389,3 +391,10 @@ Revision 2.27: r32 inherits deferred safety APK materialization and evidence-dri
 
 
 Revision 2.28: r33 inherits non-compiler build micro-acceleration while explicitly excluding Kotlin/KSP tuning without separate approval.
+
+R34 FULL SUITE CONTRACT
+- Two-line new-session proof: exact versioned MotorLab first, immediate Fantastici 20 second.
+- Fantastici 20 includes ALL existing/future MotorLab capabilities and subcapabilities.
+- Re-entry Gate applies the full compatible suite on every supported turn, restores checkpoints and numeric progress.
+- Never claim a hook/sidecar/service ran unless observed; preserve Velocity and native project engine.
+Revision 2.29: full suite auto re-entry and two-line activation proof.
