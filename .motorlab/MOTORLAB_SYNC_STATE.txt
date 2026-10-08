@@ -166,3 +166,6 @@ PRECOMPRESSED_ARTIFACT_UPLOAD=no_recompression
 PRIMARY_ARTIFACT_LOGS=separate
 KOTLIN_KSP_TUNING=forbidden_without_explicit_approval
 R33_ADOPTION=verified-safe-boundary
+
+GRADLE_CACHE_OVERWRITE_EXISTING=allowed_on_ephemeral_runner
+BATCH_TINY_TESTS=when_semantics_unchanged
