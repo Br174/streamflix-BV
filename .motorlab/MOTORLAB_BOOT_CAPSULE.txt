@@ -1,6 +1,6 @@
 MOTORLAB CRITICAL BOOT CAPSULE V1
 STATUS=MANDATORY_FIRST_CONTEXT
-RELEASE=2026.10.08-r32
+RELEASE=2026.10.08-r33
 PURPOSE=non-truncatable critical contract for every current/future project session
 
 ACTIVATION
