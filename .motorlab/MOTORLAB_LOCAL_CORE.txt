@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.08-r31
+RELEASE=2026.10.08-r32
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -303,6 +303,16 @@ REENTRY_DOWNGRADE=forbidden
 REENTRY_SECOND_SCHEDULER=forbidden
 SUPPORTED_PROMPT_HOOK=motorlab_boot.py_before_pollicino
 
+R32 BUILD FAST LANE INHERITANCE
+BUILD_FAST_LANE=required
+DEFERRED_SAFETY_MATERIALIZATION=required
+SAFETY_SOURCE_CHECKPOINT=github_immutable_ref
+SAFETY_APK_MATERIALIZATION=on_demand
+SAFETY_SECOND_GRADLE_DEFAULT=forbidden
+ARTIFACT_READY_DELIVERY=required
+GRADLE_FAST_PROFILE=cache+configuration_cache+parallel_when_compatible
+BUILD_TIMING_EVIDENCE=required
+
 R28 AUTOMATIC RELEASE FANOUT + SESSION PIN INHERITANCE
 - MotorLab release fanout is mandatory for every registered project.
 - Current project sessions pin their complete MotorLab snapshot and cannot switch release underneath active work.
@@ -312,7 +322,7 @@ R28 AUTOMATIC RELEASE FANOUT + SESSION PIN INHERITANCE
 - LAST_GOOD remains the immediately previous verified release.
 
 VERSION
-MOTORLAB-SATELLITE-BUNDLE-V2.26
+MOTORLAB-SATELLITE-BUNDLE-V2.27
 Revision 2.6: r16 adds authority/data ownership, persistent operational state, MOTORLAB_OPERATION_ID, observability boundaries, service connection-status tracking and non-redundant auxiliary-tool routing.
 Revision 2.7: r17 adds Android update-family lifecycle fallback markers.
 
@@ -364,3 +374,6 @@ Revision 2.25: r30 inherits mandatory non-truncatable critical capsule + compact
 
 
 Revision 2.26: r31 inherits mandatory every-turn/resume MotorLab re-entry and safe verified-local pin refresh.
+
+
+Revision 2.27: r32 inherits deferred safety APK materialization and evidence-driven Android/UAB build fast lane.
