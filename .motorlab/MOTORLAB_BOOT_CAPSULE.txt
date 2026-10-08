@@ -1,12 +1,13 @@
 MOTORLAB CRITICAL BOOT CAPSULE V1
 STATUS=MANDATORY_FIRST_CONTEXT
-RELEASE=2026.10.08-r33
-PURPOSE=non-truncatable critical contract for every current/future project session
+RELEASE=2026.10.08-r34
+PURPOSE=complete suite project boot contract
 
 ACTIVATION
 ALL_PROJECTS_MOTORLAB=required
 FUTURE_PROJECT_AUTO_ONBOARD=required
 FIRST_VISIBLE_LINE=⚙️ MotorLab rNN attivo
+SECOND_VISIBLE_LINE=✨ MotorLab — I Fantastici 20 attivati
 VERSION_SOURCE=pinned_session_release
 UNVERSIONED_STARTUP=invalid
 SESSION_RELEASE_PIN=required
@@ -30,7 +31,7 @@ STATUS_FORMAT=<emoji> <canonical label> — <context>. Progresso MotorLab: <N>%.
 PROGRESS_BASIS=verified_milestones_not_elapsed_time
 FAKE_PROGRESS=forbidden
 PROGRESS_RESET_ON_NEW_CHAT=forbidden
-HOST_OPAQUE_THINKING=not_controllable_without_host_surface
+HOST_OPAQUE_THINKING=host_limited
 VISIBLE_CONTROL_POINT_PROGRESS=required
 
 VISUAL_STATUS
@@ -115,4 +116,4 @@ BUSY_TARGET=PENDING_SAFE_BOUNDARY
 FUTURE_PROJECT_INHERITS_CURRENT_CAPSULE=required
 CAPSULE_FIRST_IN_BOOT_CONTEXT=required
 CAPSULE_TRUNCATION=forbidden
-DETAIL_MODULES=load_on_demand_after_critical_capsule
+DETAIL_MODULES=load_on_demand
