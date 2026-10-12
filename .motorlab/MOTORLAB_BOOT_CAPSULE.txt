@@ -1,7 +1,7 @@
 MOTORLAB CRITICAL BOOT CAPSULE V1
 STATUS=MANDATORY_FIRST_CONTEXT
-RELEASE=2026.10.08-r34
-PURPOSE=complete suite project boot contract
+RELEASE=2026.10.12-r35
+
 
 ACTIVATION
 ALL_PROJECTS_MOTORLAB=required
@@ -28,7 +28,7 @@ NUMERIC_PROGRESS=required
 HARD_PROGRESS_VISIBILITY=required
 FIRST_ACTIVE_STATUS=required
 STATUS_FORMAT=<emoji> <canonical label> — <context>. Progresso MotorLab: <N>%.
-PROGRESS_BASIS=verified_milestones_not_elapsed_time
+PROGRESS_BASIS=verified_milestones
 FAKE_PROGRESS=forbidden
 PROGRESS_RESET_ON_NEW_CHAT=forbidden
 HOST_OPAQUE_THINKING=host_limited
@@ -83,6 +83,7 @@ RESUME_READY=required_when_supported
 SINGLE_WRITER=required
 ROOT_CAUSE_CLOSURE=required
 CHANGE_COMPATIBILITY_GUARD=required
+RULE_RETIREMENT_PROOF=required
 ONE_RESPONSIBILITY_ONE_ACTIVE_COORDINATOR=required
 
 ARTIFACT_APK
