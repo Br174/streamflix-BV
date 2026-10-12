@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.08-r34
+RELEASE=2026.10.12-r35
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -27,6 +27,7 @@ LIVE_EVENT_CLASSIFICATION=required
 CONTROL_PLANE_CI_SUPPRESSION=required
 CHANGE_COMPATIBILITY_GUARD=required
 CHANGE_COMPATIBILITY_PILLAR=required
+RULE_RETIREMENT_PROOF=required
 WATCHDOG=required
 RESUME_RECOVERY=required
 FOREGROUND_STALL_GUARD=required
@@ -398,3 +399,11 @@ R34 FULL SUITE CONTRACT
 - Re-entry Gate applies the full compatible suite on every supported turn, restores checkpoints and numeric progress.
 - Never claim a hook/sidecar/service ran unless observed; preserve Velocity and native project engine.
 Revision 2.29: full suite auto re-entry and two-line activation proof.
+
+R35 VERIFIED RULE REPLACEMENT
+- The existing Compatibility Guard v1.3 is the sole owner.
+- Approved same-responsibility replacement inventories and retires old active rules, code, fallback, cache and re-entry paths; tests must prove forbidden old behavior cannot recur.
+- Keep independent/safety/native rules and verified LAST_GOOD; no approval bypass.
+Revision 2.30: r35 Regola Madre delle Regole for active and future projects.
+
+R35 CONSOLIDATION: IDENTICAL approved rule -> one merged canonical active rule; CONTRADICTORY approved rule -> latest approved wins for same responsibility and all conflicting old paths retired; COMPLEMENTARY -> both preserved with distinct ownership. Core release remains r35; no second resolver. Always preserve pre-change approval and safety.

@@ -1,7 +1,6 @@
 MOTORLAB CRITICAL BOOT CAPSULE V1
 STATUS=MANDATORY_FIRST_CONTEXT
-RELEASE=2026.10.12-r35
-
+RELEASE=2026.10.12-r36
 
 ACTIVATION
 ALL_PROJECTS_MOTORLAB=required
@@ -13,7 +12,6 @@ UNVERSIONED_STARTUP=invalid
 SESSION_RELEASE_PIN=required
 MID_SESSION_RELEASE_SWITCH=forbidden
 PROJECT_NATIVE_ENGINE=coexist-preserve
-
 TURN_REENTRY
 REENTRY_GATE=required_every_project_user_prompt_and_resume
 REENTRY_PINNED_CAPSULE_REINJECTION=required
@@ -21,19 +19,18 @@ REENTRY_MOTORLAB_GOVERNS_THIS_TURN=required
 REENTRY_LATEST_VERIFIED_LOCAL=adopt_at_safe_reentry
 REENTRY_UNSAFE_INFLIGHT=keep_pin_until_safe
 REENTRY_DOWNGRADE=forbidden
+CHAT_CONTEXT_GUARD=required
 REENTRY_SECOND_SCHEDULER=forbidden
-
 VISIBLE_PROGRESS
 NUMERIC_PROGRESS=required
 HARD_PROGRESS_VISIBILITY=required
 FIRST_ACTIVE_STATUS=required
-STATUS_FORMAT=<emoji> <canonical label> — <context>. Progresso MotorLab: <N>%.
+STATUS_FORMAT=<emoji> <label> — <context>. MotorLab: <N>%.
 PROGRESS_BASIS=verified_milestones
 FAKE_PROGRESS=forbidden
 PROGRESS_RESET_ON_NEW_CHAT=forbidden
 HOST_OPAQUE_THINKING=host_limited
 VISIBLE_CONTROL_POINT_PROGRESS=required
-
 VISUAL_STATUS
 ⚙️=MotorLab rNN attivo
 🎆=Azione completata
@@ -53,7 +50,6 @@ VISUAL_STATUS
 ⏳=Attesa esterna
 🧪=Test / verifica in corso
 🔄=Sincronizzazione in corso
-
 VELOCITY_AND_EXECUTION
 EXECUTION_SPEED_PRIORITY=highest_after_hard_safety_correctness
 TTTA=primary_speed_kpi
@@ -70,7 +66,6 @@ SAME_SCOPE_PARALLEL_WRITE=forbidden
 FRESH_HEDGE_DEFAULT_TRIGGER_MS=10000
 STALE_PRIMARY_REPLACEMENT=when_safe_and_declared
 NO_SECOND_SCHEDULER=required
-
 CONTINUITY_RECOVERY
 POLLICINO=required_external_control_plane
 POLLICINO_IN_APP_CODE=forbidden
@@ -85,7 +80,6 @@ ROOT_CAUSE_CLOSURE=required
 CHANGE_COMPATIBILITY_GUARD=required
 RULE_RETIREMENT_PROOF=required
 ONE_RESPONSIBILITY_ONE_ACTIVE_COORDINATOR=required
-
 ARTIFACT_APK
 ARTIFACT_FIRST=required_when_user_expects_testable_artifact
 APK_ZIP_DELIVERY=critical_path_when_requested
@@ -99,7 +93,6 @@ SAFETY_SECOND_GRADLE_DEFAULT=forbidden
 SAFETY_LAB=immutable_distinct_package_and_test_signing
 BUILD_FAST_LANE=required
 ARTIFACT_READY_DELIVERY=immediate_when_verified
-
 LIFECYCLE
 FLOW=MADRE->LAB->CANDIDATA->NUOVA_MADRE
 LAB=isolated_change_and_test_line
@@ -109,7 +102,6 @@ MADRE=approved_promoted_candidate
 PROMOTION_WITHOUT_APPROVAL=forbidden
 CURRENT_VERIFIED_BASELINE=preserve
 LAST_GOOD=preserve_before_release_adoption
-
 RELEASE_FANOUT
 CENTRAL_RELEASE_FANOUT=required
 SAFE_TARGET_AUTO_ADOPT=required_for_new_sessions

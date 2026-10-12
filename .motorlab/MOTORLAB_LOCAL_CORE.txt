@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.12-r35
+RELEASE=2026.10.12-r36
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -13,6 +13,9 @@ FUTURE_PROJECT_AUTO_ONBOARD=required
 VERSIONED_BOOT_BANNER=required
 DUAL_FANTASTICI20_BANNER=required
 WHOLE_SUITE_REENTRY=required
+CHAT_CONTEXT_GUARD=required
+CHAT_CONTEXT_GUARD_OWNER=UAB_PROJECT_ROUTING
+CHAT_CONTEXT_GUARD_INVOKER=EXISTING_REENTRY_GATE
 PROJECT_CONTINUITY=required
 LABELED_VISUAL_STATUS=required
 EXTENDED_VISUAL_STATUS=required
@@ -407,3 +410,14 @@ R35 VERIFIED RULE REPLACEMENT
 Revision 2.30: r35 Regola Madre delle Regole for active and future projects.
 
 R35 CONSOLIDATION: IDENTICAL approved rule -> one merged canonical active rule; CONTRADICTORY approved rule -> latest approved wins for same responsibility and all conflicting old paths retired; COMPLEMENTARY -> both preserved with distinct ownership. Core release remains r35; no second resolver. Always preserve pre-change approval and safety.
+
+R36 TARGET-AWARE CHAT CONTEXT GUARD — ONE EXISTING ROUTER
+- Effective change TARGET decides warnings, not references to MotorLab. The central MotorLab CORE is used in ALL existing/future project chats as an orchestrator without replacing native engines.
+- CURRENT_PROJECT_CHANGE: MotorLab accelerates/modifies the project of the active chat, including authorized local satellite -> NO_WARNING.
+- MOTORLAB_CORE_SELF_CHANGE from a different identifiable project chat -> recommend the MotorLab administration chat, without automatic migration or unsafe changes.
+- OTHER_PROJECT_CHANGE from an identifiable different project chat -> recommend that project's canonical chat. EXPLANATION_ONLY -> NO_WARNING.
+- Explicit user's voluntary approved transfer to a new chat -> resume under existing operation_id/checkpoint; no duplicate writer or needless warning.
+- Reuse UAB_PROJECT_ROUTING + Re-entry Gate + Change Compatibility Guard; never add a second classifier service, scheduler or database.
+- If the host cannot supply reliable current chat/project identity, do not manufacture an alert; apply policy at the next supported control point.
+- No mandatory external ChatGPT API or paid provider; native engines and release pins remain protected.
+Revision 2.31: r36 Chat Context Guard routes by the actual change target and preserves cross-chat voluntary continuation.
