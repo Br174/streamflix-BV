@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.12-r36
+RELEASE=2026.10.14-r37
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -16,6 +16,14 @@ WHOLE_SUITE_REENTRY=required
 CHAT_CONTEXT_GUARD=required
 CHAT_CONTEXT_GUARD_OWNER=UAB_PROJECT_ROUTING
 CHAT_CONTEXT_GUARD_INVOKER=EXISTING_REENTRY_GATE
+PACMAN_PUBLIC_NAME=Pacman
+PACMAN_LEGACY_ALIAS=AutoSetup
+PACMAN_EXTERNAL_WORK_AUTO_ROUTING=required_when_capability_verified
+PACMAN_FIRST_TURN_OWNER=AUTO_BOOTSTRAP
+PACMAN_REENTRY_OWNER=EXISTING_REENTRY_GATE
+PACMAN_NO_SECOND_SCHEDULER=required
+PACMAN_AUTHORIZATION_AND_SECRET_SAFETY=required
+PACMAN_MCP_LIVE_STATUS=NOT_VERIFIED
 PROJECT_CONTINUITY=required
 LABELED_VISUAL_STATUS=required
 EXTENDED_VISUAL_STATUS=required
@@ -421,3 +429,7 @@ R36 TARGET-AWARE CHAT CONTEXT GUARD — ONE EXISTING ROUTER
 - If the host cannot supply reliable current chat/project identity, do not manufacture an alert; apply policy at the next supported control point.
 - No mandatory external ChatGPT API or paid provider; native engines and release pins remain protected.
 Revision 2.31: r36 Chat Context Guard routes by the actual change target and preserves cross-chat voluntary continuation.
+
+
+R37 GLOBAL FOUR-PILLAR CONTINUATION PATCH (2026-10-14; central CORE PR #60 + #61)
+Every MotorLab-managed turn: autonomously diagnose with available authorized tools before requesting irreducible user-only action; after status or explanation continue approved executable work until verified completion or a specific genuine blocking condition; show both current-phase and overall percentages at meaningful visible checkpoints; automatically restore the full existing MotorLab capability suite when relevant without explicit user trigger. Before a terminal response, inspect remaining approved tasks and execute the next safe step NOW rather than ending after a progress report. Preserve single-writer, security/approval, native-engine and pinned-session boundaries. Policy does not create an always-on ChatGPT executor or prove external integrations live. Canonical owners: central Root Cause Closure, Foreground Stall Guard, Progress Reporting, Re-entry Gate, CORE Entrypoint. LAST_GOOD and application code untouched.
