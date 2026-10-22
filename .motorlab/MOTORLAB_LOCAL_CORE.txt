@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.14-r37
+RELEASE=2026.10.22-r38
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -37,6 +37,7 @@ DELIVERED_ARTIFACT_IMMUTABILITY=required
 LIVE_EVENT_CLASSIFICATION=required
 CONTROL_PLANE_CI_SUPPRESSION=required
 CHANGE_COMPATIBILITY_GUARD=required
+BEHAVIOR_MEMORY_R38=required
 CHANGE_COMPATIBILITY_PILLAR=required
 RULE_RETIREMENT_PROOF=required
 WATCHDOG=required
@@ -429,6 +430,24 @@ R36 TARGET-AWARE CHAT CONTEXT GUARD — ONE EXISTING ROUTER
 - If the host cannot supply reliable current chat/project identity, do not manufacture an alert; apply policy at the next supported control point.
 - No mandatory external ChatGPT API or paid provider; native engines and release pins remain protected.
 Revision 2.31: r36 Chat Context Guard routes by the actual change target and preserves cross-chat voluntary continuation.
+
+
+R38 SATELLITE CONTINUITY — CORE LAB (2026-10-16)
+R38 canonical owner=MOTORLAB_EXECUTION_CONTINUITY_V1.txt; supported executable adapter=templates/execution/motorlab-r38-operation-entrypoint-lab.mjs; activation is conditional on host runtime loading the adapter and on safe satellite fanout. Do not label this bundle as live globally until runtime and fanout proof exists. Preserve Pacman as active AutoSetup feature.
+
+
+R38 BEHAVIOR MEMORY SATELLITE POLICY — 2026-10-22
+BEHAVIOR_RULES_OWNER=MotorLab_general_governance;project_specific_native_repo
+BEHAVIOR_RULES_DURABLE_SOURCE=GitHub_project_registry_and_CORE
+BEHAVIOR_GUARD_OWNER=MotorLab_Change_Compatibility_Guard_only
+BEHAVIOR_PREFLIGHT=templates/behavior/motorlab-behavior-preflight.mjs
+BEHAVIOR_PREFLIGHT_MISSING_TEST=PENDING_ENFORCEMENT
+BEHAVIOR_RULES_DEPLOY=at_approved_safe_release_boundary_only
+BEHAVIOR_NATIVE_ENGINES=preserved
+BEHAVIOR_NONBLOCKING_UNREGISTERED_LEGACY_PROJECTS=required
+BEHAVIOR_CLOUD_PROVIDER_WRITE=never_from_rule_contract_alone
+R38_CONTINUITY_HOST_FEATURE=NOT_ACTIVATED_BY_VERSION_NUMBER
+MOTORLAB-SATELLITE-BUNDLE-V2.32
 
 
 R37 GLOBAL FOUR-PILLAR CONTINUATION PATCH (2026-10-14; central CORE PR #60 + #61)
