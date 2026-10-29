@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "repo": "Br174/streamflix-BV",
+  "active_ref": "motorlab/active-vision-delivery",
+  "original_verified_sha": "90057ef502c9231be03f0d88d8d33cc51028830d",
+  "mode": "control-only",
+  "scudo_manifest": ".motorlab/scudo360-contracts.json",
+  "scudo_runner": ".motorlab/regression/scudo360-gate.mjs",
+  "native_workflow": ".github/workflows/publish-visionflix-tv.yml",
+  "scudo_command": "node .motorlab/regression/scudo360-gate.mjs"
+}

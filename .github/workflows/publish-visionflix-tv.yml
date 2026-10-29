@@ -29,6 +29,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: MotorLab permanent active source proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/motorlab-active-guard.mjs --self-test
+          node scripts/motorlab-active-guard.mjs
+
       - name: Setup Scudo360 test runtime
         uses: actions/setup-node@v4
         with:
