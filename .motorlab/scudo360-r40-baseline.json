@@ -1,0 +1,21 @@
+{
+  "commit": "8478565be5327eaec97078da16af762cfb9133b6",
+  "passed": true,
+  "contracts": [
+    {
+      "id": "streambv.release-signature-source-version-contract",
+      "status": "passed",
+      "classEvidence": [
+        {
+          "name": "streambv.StreamBVReleaseContracts",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "source": "archived-executed-r39-junit-snapshot",
+    "runId": 40885038559,
+    "artifactId": 12901507782
+  }
+}
