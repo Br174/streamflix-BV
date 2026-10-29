@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "project": "streambv",
+  "suites": [
+    {
+      "id": "release-contracts",
+      "command": [
+        "node",
+        "scripts/StreamBVReleaseContracts.mjs"
+      ],
+      "paths": [
+        "scripts/StreamBVReleaseContracts.mjs",
+        "scripts/verify_verlezza_release.py",
+        "tests/test_scudo_release_contracts.py"
+      ],
+      "junitDir": ".motorlab/scudo360-test-results",
+      "timeoutMs": 160000
+    }
+  ],
+  "contracts": [
+    {
+      "id": "streambv.release-signature-source-version-contract",
+      "priority": "P0",
+      "suites": [
+        "release-contracts"
+      ],
+      "junitClasses": [
+        "streambv.StreamBVReleaseContracts"
+      ],
+      "requiredAt": [
+        "lab",
+        "promotion"
+      ]
+    }
+  ]
+}

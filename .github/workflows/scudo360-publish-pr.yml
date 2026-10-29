@@ -1,0 +1,33 @@
+name: Scudo360 Verlezza TV publication PR gate
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - '.motorlab/**'
+      - '.github/workflows/publish-visionflix-tv.yml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/scudo360-publish-pr.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source, certificate, package and version contracts
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json promotion .motorlab/scudo360-report.json
+      - name: Upload JUnit proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scudo360-streambv-pr-${{ github.run_id }}
+          path: |
+            .motorlab/scudo360-report.json
+            .motorlab/scudo360-test-results/*.xml
+          if-no-files-found: warn

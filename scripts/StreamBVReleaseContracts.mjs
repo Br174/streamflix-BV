@@ -1,0 +1,13 @@
+import {spawnSync} from 'node:child_process';
+import {mkdirSync,writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+const r=spawnSync('python3',['-m','unittest','discover','-s','tests','-p','test_scudo_release_contracts.py','-v'],{encoding:'utf8',timeout:120000,maxBuffer:2000000});
+const out=(r.stdout||'')+'\n'+(r.stderr||'');process.stdout.write(out.slice(-6000));
+const m=out.match(/Ran (\d+) tests? in/);
+const n=m?Number(m[1]):0;
+const passed=r.status===0&&!r.error&&n>=5&&/\bOK\s*$/.test(out.trim());
+const err=(passed?'':'<failure message="Version or signing checks failed">'+out.slice(-1300).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+'</failure>');
+const dir='.motorlab/scudo360-test-results';mkdirSync(dir,{recursive:true});
+writeFileSync(join(dir,'TEST-streambv.StreamBVReleaseContracts.xml'),'<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="streambv.StreamBVReleaseContracts" tests="'+Math.max(1,n)+'" errors="0" failures="'+(passed?0:1)+'" skipped="0"><testcase classname="streambv.StreamBVReleaseContracts" name="real_Python_release_contract_suite">'+err+'</testcase></testsuite>\n');
+console.log('SCUDO_STREAMBV_TEST_COUNT',n,'PASS',passed);
+if(!passed)process.exitCode=1;

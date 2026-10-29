@@ -13,6 +13,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
 
+      - name: Setup Scudo360 test runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Scudo360 release manifest + signing invariants
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json promotion .motorlab/scudo360-report.json
+      - name: Capture Scudo360 release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scudo360-streambv-tag-${{ github.run_id }}
+          path: |
+            .motorlab/scudo360-report.json
+            .motorlab/scudo360-test-results/*.xml
+          if-no-files-found: warn
+
       - name: Setup JDK environment
         uses: actions/setup-java@v1
         with:

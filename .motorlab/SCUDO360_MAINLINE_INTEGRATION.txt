@@ -1,0 +1,1 @@
+Scudo360 streamflix-BV: native Python release-manifest tests guard URL/source constraints, signing SHA-256, app package, TV launcher and version monotonicity; required before tag build and before public publishing. Existing security checks are preserved, no APK copied or generated in this PR. Publisher edits alone no longer trigger a production publication.
