@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "surface": "ci",
+  "requestTrace": [
+    {
+      "id": "protect-streambv.release-signature-source-version-contract",
+      "contractIds": [
+        "streambv.release-signature-source-version-contract"
+      ]
+    }
+  ],
+  "baselineCommit": "8478565be5327eaec97078da16af762cfb9133b6",
+  "baselineReportPath": ".motorlab/scudo360-r40-baseline.json"
+}
