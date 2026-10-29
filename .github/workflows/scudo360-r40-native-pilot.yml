@@ -1,0 +1,29 @@
+name: Scudo360 r40 StreamBV native quality LAB
+on:
+  pull_request:
+    branches:
+      - motorlab/active-vision-delivery
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Execute existing r39 suite only once
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json lab .motorlab/scudo360-r40-native.json
+      - name: Audit every native P0 P1 request on exact source commit
+        run: node .motorlab/regression/scudo360-quality-r40.mjs .motorlab/scudo360-contracts.json .motorlab/scudo360-r40-native.json .motorlab/scudo360-r40-plan.json .motorlab/scudo360-r40-quality.json
+      - name: Publish evidence including failed native contracts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scudo-r40-streambv-evidence
+          path: |
+            .motorlab/scudo360-r40-native.json
+            .motorlab/scudo360-r40-quality.json
+          if-no-files-found: warn
