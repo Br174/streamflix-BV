@@ -6,7 +6,7 @@ on:
     paths:
       - release-manifest.json
       - scripts/verify_verlezza_release.py
-      - .github/workflows/publish-visionflix-tv.yml
+      # Editing the publisher itself must never trigger a production publication.
   workflow_dispatch:
 
 permissions:
@@ -28,6 +28,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: Setup Scudo360 test runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Scudo360 signed release policy JUnit gate
+        run: node .motorlab/regression/scudo360-gate.mjs .motorlab/scudo360-contracts.json promotion .motorlab/scudo360-report.json
+      - name: Preserve release test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scudo360-streambv-${{ github.run_id }}
+          path: |
+            .motorlab/scudo360-report.json
+            .motorlab/scudo360-test-results/*.xml
+          if-no-files-found: warn
 
       - name: Validate release manifest
         run: python3 scripts/verify_verlezza_release.py prepare release-manifest.json
