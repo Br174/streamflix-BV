@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "surface": "ci",
+  "requestTrace": [
+    {
+      "id": "protect-streambv.release-signature-source-version-contract",
+      "contractIds": [
+        "streambv.release-signature-source-version-contract"
+      ]
+    }
+  ],
+  "baselineCommit": null,
+  "baselineReportPath": null
+}
