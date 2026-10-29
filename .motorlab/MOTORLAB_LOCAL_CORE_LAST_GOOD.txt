@@ -1,5 +1,5 @@
 MOTORLAB SATELLITE BUNDLE
-RELEASE=2026.10.22-r38
+RELEASE=2026.10.29-r39
 CENTRAL_AUTHORITY=Br174/Chatgpt
 PROJECT_NATIVE_ENGINE_POLICY=coexist-preserve
 PRE_RESPONSE_BOOT_GATE=required
@@ -449,6 +449,14 @@ BEHAVIOR_CLOUD_PROVIDER_WRITE=never_from_rule_contract_alone
 R38_CONTINUITY_HOST_FEATURE=NOT_ACTIVATED_BY_VERSION_NUMBER
 MOTORLAB-SATELLITE-BUNDLE-V2.32
 
-
-R37 GLOBAL FOUR-PILLAR CONTINUATION PATCH (2026-10-14; central CORE PR #60 + #61)
-Every MotorLab-managed turn: autonomously diagnose with available authorized tools before requesting irreducible user-only action; after status or explanation continue approved executable work until verified completion or a specific genuine blocking condition; show both current-phase and overall percentages at meaningful visible checkpoints; automatically restore the full existing MotorLab capability suite when relevant without explicit user trigger. Before a terminal response, inspect remaining approved tasks and execute the next safe step NOW rather than ending after a progress report. Preserve single-writer, security/approval, native-engine and pinned-session boundaries. Policy does not create an always-on ChatGPT executor or prove external integrations live. Canonical owners: central Root Cause Closure, Foreground Stall Guard, Progress Reporting, Re-entry Gate, CORE Entrypoint. LAST_GOOD and application code untouched.
+SCUDO360_R39=required_where_verified_adapter_installed
+SCUDO360_REGRESSION_OWNER=existing_Change_Compatibility_Guard
+SCUDO360_BEHAVIOR_MEMORY=existing_project_owned_registry
+SCUDO360_EVIDENCE_GATE=templates/regression/scudo360-gate.mjs
+SCUDO360_EXECUTION_REQUIREMENT=actual_JUnit_classes_per_P0_P1_contract_at_exact_commit
+SCUDO360_MISSING_ADAPTER=PENDING_ENFORCEMENT_NOT_SUCCESS
+SCUDO360_FAIL_CLOSED=missing_skipped_stale_failed_or_unmapped_tests
+SCUDO360_GLOBAL_COVERAGE_CLAIM=forbidden_without_per_project_CI_and_receipts
+SCUDO360_FAST_LAB_AND_PROMOTION=separate_evidence_levels
+SCUDO360_NO_SECOND_COORDINATOR=required
+MOTORLAB-SATELLITE-BUNDLE-V2.33
